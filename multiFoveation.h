@@ -1,7 +1,7 @@
 /**
  * \file multiFoveation.h
  *
- * \brief This file contains the prototype of structure multifoveated.
+ * \brief This file contains the prototype and implementation of structure multifoveated.
  *
  * \author 
  * Petrucio Ricardo Tavares de Medeiros \n
@@ -34,13 +34,20 @@
 #ifndef MULTIFOVEATION_H
 #define MULTIFOVEATION_H
 
+#include <stdlib.h>
+#include <stdio.h>
+#include "foveatedHessianDetector.h"
+#include "opencv2/core/core.hpp"
+#include "opencv2/features2d/features2d.hpp"
+#include "opencv2/highgui/highgui.hpp"
+#include "opencv2/nonfree/nonfree.hpp"
+
 /**
  * \struct MultiFoveation 
  *
  * \brief Struct for múltiples foveae.
  */
 struct MultiFoveation{
-
   /**
    * \fn void MultiFoveation(int foveae)
    *
@@ -48,10 +55,48 @@ struct MultiFoveation{
    *
    * \param foveae - Number of foveae
    */
-  void MultiFoveation(int foveas);
+  MultiFoveation(int foveas);
   
+  /**
+   * \fn Point intersection(int fovea1, int fovea2);
+   *
+   * \brief Function for calculate the intersection between foveae.
+   *
+   * \param fovea1 - Fovea before processed.
+   *        fovea2 - Fovea to be processed.
+   *
+   * \return Point of intersection between foveae.
+   */
+  Point intersection(int fovea1, int fovea2);
   
-
 };
 
 #endif
+
+/**
+ * \fn void MultiFoveation(int foveae)
+ *
+ * \brief Constructor multi foveae.
+ *
+ * \param foveae - Number of foveae
+ */
+MultiFoveation::MultiFoveation(int foveas){
+  printf("Estou iniciando o foveamento");
+}
+
+/**
+ * \fn Point intersection(int fovea1, int fovea2);
+ *
+ * \brief Function for calculate the intersection between foveae.
+ *
+ * \param fovea1 - Fovea before processed.
+ *        fovea2 - Fovea to be processed.
+ *
+ * \return Point of intersection between foveae.
+ */
+Point 
+MultiFoveation::intersection(int fovea1, int fovea2){
+  Point p = Point(1, 2);
+  return p;
+}
+
