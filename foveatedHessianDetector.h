@@ -192,7 +192,7 @@ static void calcLayerDetAndTrace( const Mat& sum, int size, int sampleStep,
 	std::cout << "Computando a imagem Hessiana" << std::endl;
 	std::cout << "Margin H = " << marginH << std::endl;
 	std::cout << "foveaLevel = " << foveaLevel << std::endl;
-	std::cout << "fovea = " << fx << " " << fy << std::endl;
+	std::cout << "fovea = " << params.foveaModel.fx << " " << params.foveaModel.fy << std::endl;
 	std::cout << "delta = " << deltax << " " << deltay << std::endl;
 	std::cout << "A wavelet vai de " << margin_x << " até " << limit_x << std::endl;
 	std::cout << "Pulando de " << sampleStep << " em " << sampleStep << std::endl;
@@ -207,12 +207,15 @@ static void calcLayerDetAndTrace( const Mat& sum, int size, int sampleStep,
 	resizeHaarPattern( dy_s , Dy , NY , 9, size, sum.cols );
 	resizeHaarPattern( dxy_s, Dxy, NXY, 9, size, sum.cols );
 
-	for(int  i = 0; sum_i + size/2 <= limit_y; i++, sum_i += sampleStep ) {
+	int intersectiony = params.foveaModel.getIntersectiony(k);
+	int intersectionx = params.foveaModel.getIntersectionx(k);
+
+	for(int  i = 0 + intersectiony; sum_i + size/2 <= limit_y; i++, sum_i += sampleStep ) {
 		sum_j = margin_x - size/2;
 		const int* sum_ptr = sum.ptr<int>(sum_i, sum_j);
 		float* det_ptr = &det.at<float>(i, 0);
 		float* trace_ptr = &trace.at<float>(i, 0);
-		for(int j = 0; sum_j + size/2 <= limit_x; sum_j += sampleStep, j++ ) {
+		for(int j = 0 + intersectionx; sum_j + size/2 <= limit_x; sum_j += sampleStep, j++ ) {
 			float dx  = calcHaarPattern( sum_ptr, Dx , 3 );
 			float dy  = calcHaarPattern( sum_ptr, Dy , 3 );
 			float dxy = calcHaarPattern( sum_ptr, Dxy, 4 );
@@ -243,7 +246,7 @@ static void calcLayerDetAndTrace( const Mat& sum, int size, int sampleStep,
  *
  * Return value is 1 if interpolation was successful, 0 on failure.
  */
-	static int
+static int
 interpolateKeypoint( float N9[3][9], int dx, int dy, int ds, KeyPoint& kpt )
 {
 	Vec3f b(-(N9[1][5]-N9[1][3])/2,  // Negative 1st deriv with respect to x
@@ -428,11 +431,14 @@ void SURFFindInvoker::findMaximaInLayer( const Mat& sum, const Mat& mask_sum,
 
 	int step = (int)(dets[layer].step/dets[layer].elemSize());
 
-	for( int i = 0; sum_i + size/2 <= limit_y; i++, sum_i += sampleStep ) {
+	int intersectiony = params.foveaModel.getIntersectiony(k);
+	int intersectionx = params.foveaModel.getIntersectionx(k);
+
+	for( int i = 0 + intersectiony; sum_i + size/2 <= limit_y; i++, sum_i += sampleStep ) {
 		sum_j = margin_x - size/2;
 		const float* det_ptr = dets[layer].ptr<float>(i);
 		const float* trace_ptr = traces[layer].ptr<float>(i);
-		for(int j = 0; sum_j + size/2 <= limit_x; sum_j += sampleStep, j++ ) {
+		for(int j = 0 + intersectionx; sum_j + size/2 <= limit_x; sum_j += sampleStep, j++ ) {
 			float val0 = det_ptr[j];
 			if(val0 > hessianThreshold) {
 				/* The 3x3x3 neighbouring samples around the maxima.
@@ -553,8 +559,10 @@ static void fastFoveatedHessianDetector( const Mat& sum, const Mat& mask_sum, ve
 
 			if( 0 < layer && layer <= nOctaveLayers )
 				middleIndices[middleIndex++] = index;
-			//			std::cout << index << " " << layer << ", sampleStep = " << sampleSteps[index] << "\t";
-			//			std::cout << "Size: " << sizes[index] << ", eta = " << params.eta[i] << std::endl;
+			/*std::cout << index << " " << layer << ", sampleStep = " << sampleSteps[index] << "\t";
+			  std::cout << "Size: " << sizes[index] << ", eta = " << params.eta[i] << std::endl;
+			std::cout << "Size: " << sizes[index] << std::endl;
+			std::cout << "Margin: " << margin[index] << std::endl;*/
 			index++;
 		}
 	}
