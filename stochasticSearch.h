@@ -1,7 +1,7 @@
 /**
  * \file stochasticSearch.h
  *
- * \brief This file contains the prototype of stochastic search.
+ * \brief This file contains the prototype and implementation of stochastic search.
  *
  * \author 
  * Petrucio Ricardo Tavares de Medeiros \n
@@ -13,7 +13,7 @@
  * \date February 2016
  *
  * \copyright
- * Copyright (C) 2014, Petrúcio Ricardo <petrucior@gmail.com>
+ * Copyright (C) 2016, Petrúcio Ricardo <petrucior@gmail.com>
  * If you use this software for academic purposes, consider citing the related
  * paper: Rafael Beserra Gomes, Bruno Motta de Carvalho, Luiz Marcos Garcia 
  * Gonçalves, Visual attention guided features selection with foveated images,
@@ -34,6 +34,61 @@
 #ifndef STOCHASTICSEARCH_H
 #define STOCHASTICSEARCH_H
 
+/**
+ * \struct StochasticSearch 
+ *
+ * \brief Struct for stochastic search.
+ */
+struct StochasticSearch{
 
+  //
+  // Variables
+  //
+  int samples;
+
+  /**
+   * \fn StochasticSearch( int _samples )
+   *
+   * \brief Constructor to search for structure foveated
+   *
+   * \param _samples - The samples of hipotheses
+   */
+  StochasticSearch( int samples );
+  
+  /**
+   * \fn Point search( Mat image, Mat template )
+   *
+   * \brief Method for search the template in image
+   *
+   * \param image - Image for search
+   *        template - Template image to be search
+   */
+  Point search( Mat image, Mat template );
+  
+};
+
+/**
+ * \fn StochasticSearch( int _samples );
+ *
+ * \brief Constructor to search for structure foveated.
+ *
+ * \param _samples - The samples of hipotheses
+ */
+StochasticSearch::StochasticSearch( int _samples ){
+  samples = _samples;
+}
+
+/**
+ * \fn Point search( Mat image, Mat template )
+ *
+ * \brief Method for search the template in image
+ *
+ * \param image - Image for search
+ *        template - Template image to be search
+ */
+Point 
+StochasticSearch::search( Mat image, Mat template ){
+  
+}
 
 #endif
