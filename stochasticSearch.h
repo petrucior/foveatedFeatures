@@ -67,6 +67,9 @@ struct StochasticSearch{
   
 };
 
+#endif
+
+
 /**
  * \fn StochasticSearch( int _samples );
  *
@@ -88,7 +91,7 @@ StochasticSearch::StochasticSearch( int _samples ){
  */
 Point 
 StochasticSearch::search( Mat image, Mat template ){
-  
+  Point stimation;
+  Point p = Point(0, 0);
+  return p;
 }
-
-#endif

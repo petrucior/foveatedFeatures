@@ -40,7 +40,7 @@ OBJS=
 #
 # A variável ALL indica os arquivos executáveis
 #
-all: match extract tracking
+all: match extract tracking generator
 
 #
 # Regra de compilação e ligação do executáveis
@@ -61,6 +61,18 @@ tracking: tracking.cpp $(DIR)/foveatedHessianDetector.h $(DIR)/foveatedTracking.
 	$(CC) $(LFLAGS) tracking.cpp `pkg-config --cflags --libs opencv` -o tracking $(LIBS) -O3
 
 #
+# Regra de compilação e ligação do executáveis
+# 
+generator: generator.cpp ../stochasticSearch.h $(DIR)/foveatedHessianDetector.h
+	$(CC) $(LFLAGS) generator.cpp `pkg-config --cflags --libs opencv` -o generator $(LIBS) -O3
+
+#
+# Regra de execução do arquivo generator
+#
+generatorExecutavel:
+	./generator box_in_scene.png box.png > box.dat
+
+#
 # Regra que elimina arquivos intermediários
 # 
 clean:
@@ -70,5 +82,5 @@ clean:
 # Regra que elimina arquivos intermediários e executável
 # 
 realclean:
-	rm -f *.o *.cpp~ match extract tracking
+	rm -f *.o *.cpp~ match extract tracking generator
 
