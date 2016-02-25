@@ -13,7 +13,7 @@
  * \date February 2016
  *
  * \copyright
- * Copyright (C) 2014, Petrúcio Ricardo <petrucior@gmail.com>
+ * Copyright (C) 2016, Petrúcio Ricardo <petrucior@gmail.com>
  * If you use this software for academic purposes, consider citing the related
  * paper: Rafael Beserra Gomes, Bruno Motta de Carvalho, Luiz Marcos Garcia 
  * Gonçalves, Visual attention guided features selection with foveated images,
@@ -106,6 +106,19 @@ struct MultiFoveation{
    */
   Point intersection(int k, int m, Size R, int fovea1, int fovea2);
   
+  /**
+   * \fn std::vector<Point> limitProcessing(Point pointIntersection, int fovea1, int fovea2);
+   *
+   * \brief Function for calculate the limits of processing.
+   *
+   * \param pointIntersection - The point of intersection to find with intersection function
+   *        fovea1 - Fovea before processed
+   *        fovea2 - Fovea to be processed
+   *
+   * \return Vector of limits of processing
+   */
+  std::vector<Point> limitProcessing(Point pointIntersection, int fovea1, int fovea2);
+  
 };
 
 #endif
@@ -122,6 +135,8 @@ struct MultiFoveation{
 MultiFoveation::MultiFoveation(int foveas, Mat image, std::vector<String> ymlFile){
   std::vector<int> pontox;
   std::vector<int> pontoy;
+  std::vector<Point> limits;
+  std::vector<int> limit;
   for (int i = 0; i < foveas; i++){
     FoveatedHessianDetectorParams p(image.cols, image.rows, ymlFile[i]);
     params.push_back(p);
@@ -131,10 +146,21 @@ MultiFoveation::MultiFoveation(int foveas, Mat image, std::vector<String> ymlFil
 	Point pontos = intersection(k, m, image.size(), i-1, i);
 	pontox.push_back(pontos.x);
 	pontoy.push_back(pontos.y);
+	limits = limitProcessing(pontos, i-1, i);
+	for (unsigned int k = 0; k < limits.size(); k++){
+	  pontos = limits[k];
+	  limit.push_back(pontos.x);
+	  limit.push_back(pontos.y);
+	}
       }
-      params[i].foveaModel.setIntersection(pontox, pontoy);
+      params[i].foveaModel.setIntersection(pontox, pontoy, limit);
     }
   }
+  // DEBUG
+  /*for (int i = 0; i < limits.size(); i++){
+    Point p = limits[i];
+    std::cout << p.x << " :::: " << p.y << std::endl;
+  }*/
 }
 
 /**
@@ -193,18 +219,18 @@ MultiFoveation::intersection(int k, int m, Size R, int fovea1, int fovea2){
   // Component x of intersection point
   //
   // wmax e wmin ( conditional ternary )
-  max(f1.foveaModel.fx, f2.foveaModel.fx) == f2.foveaModel.fx ? wmax = f2.foveaModel.wx/2 : wmax = f1.foveaModel.wx/2;
-  min(f1.foveaModel.fx, f2.foveaModel.fx) == f2.foveaModel.fx ? wmin = f2.foveaModel.wx/2 : wmin = f1.foveaModel.wx/2;
+  max(f1.foveaModel.fx+(R.width/2), f2.foveaModel.fx+(R.width/2)) == f2.foveaModel.fx+(R.width/2) ? wmax = f2.foveaModel.wx/2 : wmax = f1.foveaModel.wx/2;
+  min(f1.foveaModel.fx+(R.width/2), f2.foveaModel.fx+(R.width/2)) == f2.foveaModel.fx+(R.width/2) ? wmin = f2.foveaModel.wx/2 : wmin = f1.foveaModel.wx/2;
   // p1 e p2
-  p1 = max( max(f1.foveaModel.fx, f2.foveaModel.fx) - wmax , min(f1.foveaModel.fx, f2.foveaModel.fx) + wmin );
-  p2 = min( max(f1.foveaModel.fx, f2.foveaModel.fx) - wmax , min(f1.foveaModel.fx, f2.foveaModel.fx) + wmin );
+  p1 = max( max(f1.foveaModel.fx+(R.width/2), f2.foveaModel.fx+(R.width/2)) - wmax , min(f1.foveaModel.fx+(R.width/2), f2.foveaModel.fx+(R.width/2)) + wmin );
+  p2 = min( max(f1.foveaModel.fx+(R.width/2), f2.foveaModel.fx+(R.width/2)) - wmax , min(f1.foveaModel.fx+(R.width/2), f2.foveaModel.fx+(R.width/2)) + wmin );
   
   // DEBUG
   /*std::cout << "f1.x = " << f1.foveaModel.fx << ", f2.x = " << f2.foveaModel.fx << std::endl;
   std::cout << "p1 = " << p1 << ", p2 = " << p2 << std::endl;
   std::cout << "wmax = " << wmax << ", wmin = " << wmin << std::endl;*/
   // Component x axis
-  if ( min(f1.foveaModel.fx, f2.foveaModel.fx) == f1.foveaModel.fx ){ // Fóvea 1 mais próxima da origem
+  if ( min(f1.foveaModel.fx+(R.width/2), f2.foveaModel.fx+(R.width/2)) == f1.foveaModel.fx+(R.width/2) ){ // Fóvea 1 mais próxima da origem
     p.x = ( k * p1 )/m;
   }
   else{ // Fóvea 2 mais próxima da origem
@@ -215,17 +241,17 @@ MultiFoveation::intersection(int k, int m, Size R, int fovea1, int fovea2){
   // Component y of intersection point
   //
   // wmax e wmin ( conditional ternary )
-  max(f1.foveaModel.fy, f2.foveaModel.fy) == f2.foveaModel.fy ? wmax = f2.foveaModel.wy/2 : wmin = f1.foveaModel.wy/2;
-  min(f1.foveaModel.fy, f2.foveaModel.fy) == f2.foveaModel.fy ? wmin = f2.foveaModel.wy/2 : wmax = f1.foveaModel.wy/2;
+  max(f1.foveaModel.fy+(R.height/2), f2.foveaModel.fy+(R.height/2)) == f2.foveaModel.fy+(R.height/2) ? wmax = f2.foveaModel.wy/2 : wmin = f1.foveaModel.wy/2;
+  min(f1.foveaModel.fy+(R.height/2), f2.foveaModel.fy+(R.height/2)) == f2.foveaModel.fy+(R.height/2) ? wmin = f2.foveaModel.wy/2 : wmax = f1.foveaModel.wy/2;
   // p1 e p2
-  p1 = max( max(f1.foveaModel.fy, f2.foveaModel.fy) - wmax , min(f1.foveaModel.fy, f2.foveaModel.fy) + wmin );
-  p2 = min( max(f1.foveaModel.fy, f2.foveaModel.fy) - wmax , min(f1.foveaModel.fy, f2.foveaModel.fy) + wmin );
+  p1 = max( max(f1.foveaModel.fy+(R.height/2), f2.foveaModel.fy+(R.height/2)) - wmax , min(f1.foveaModel.fy+(R.height/2), f2.foveaModel.fy+(R.height/2)) + wmin );
+  p2 = min( max(f1.foveaModel.fy+(R.height/2), f2.foveaModel.fy+(R.height/2)) - wmax , min(f1.foveaModel.fy+(R.height/2), f2.foveaModel.fy+(R.height/2)) + wmin );
   // DEBUG
   /*std::cout << "f1.y = " << f1.foveaModel.fy << ", f2.y = " << f2.foveaModel.fy << std::endl;
   std::cout << "p1 = " << p1 << ", p2 = " << p2 << std::endl;
   std::cout << "wmax = " << wmax << ", wmin = " << wmin << std::endl;*/
   // Component y axis
-  if ( min(f1.foveaModel.fy, f2.foveaModel.fy) == f1.foveaModel.fy ){ // Fóvea 1 mais próxima da origem
+  if ( min(f1.foveaModel.fy+(R.height/2), f2.foveaModel.fy+(R.height/2)) == f1.foveaModel.fy+(R.height/2) ){ // Fóvea 1 mais próxima da origem
     p.y = ( k * p1 )/m;
   }
   else{ // Fóvea 2 mais próxima da origem
@@ -233,7 +259,78 @@ MultiFoveation::intersection(int k, int m, Size R, int fovea1, int fovea2){
   }
   
   std::cout << p.x << " | " << p.y << std::endl;
-
+  
   return p;
 }
 
+/**
+ * \fn std::vector<Point> limitProcessing(Point pointIntersection, int fovea1, int fovea2);
+ *
+ * \brief Function for calculate the limits of processing.
+ *
+ * \param pointIntersection - The point of intersection to find with intersection function
+ *        fovea1 - Fovea before processed
+ *        fovea2 - Fovea to be processed
+ *
+ * \return Vector of limits of processing
+ */
+std::vector<Point> 
+MultiFoveation::limitProcessing(Point pointIntersection, int fovea1, int fovea2){
+  FoveatedHessianDetectorParams f1, f2;
+  f1 = params[fovea1];
+  f2 = params[fovea2];
+  Point v = Point(f2.foveaModel.fx - f1.foveaModel.fx, f2.foveaModel.fy - f1.foveaModel.fy);
+  std::vector<Point> limits;
+  Point start = Point(0, 0);
+  Point finish = Point(0, 0);
+  Point flag = Point(-1, -1);
+  // Horizontal shifting
+  if ( (v.x > 0) && (v.y == 0) ){ // Shift out of origin
+    start.x = pointIntersection.x;
+  }
+  if ( (v.x < 0) && (v.y == 0) ){ // Shift in of origin
+    finish.x = pointIntersection.x;
+  }
+
+  // Vertical shifting
+  if ( (v.x == 0) && (v.y > 0) ){ // Shift out of origin
+    finish.y = pointIntersection.y;
+  }
+  if ( (v.x == 0) && (v.y < 0) ){ // Shift in of origin
+    start.y = pointIntersection.y;
+  }
+  
+  // Diagonal shifting
+  if ( (v.x > 0) && (v.y > 0) ){ // Deslocamento para o sentido nordeste
+    //std::cout << "sentido nordeste" << std::endl;
+    flag.x = 0;
+    flag.y = 0;
+  }
+  if ( (v.x > 0) && (v.y < 0) ){ // Deslocamento para o sentido sudeste
+    //std::cout << "sentido sudeste" << std::endl;
+    flag.x = 0;
+    flag.y = 1;
+  }
+  if ( (v.x < 0) && (v.y > 0) ){ // Deslocamento para o sentido norte
+    //std::cout << "sentido norte" << std::endl;
+    flag.x = 1;
+    flag.y = 0;
+  }
+  if ( (v.x < 0) && (v.y < 0) ){ // Deslocamento para o sentido centro-oeste
+    //std::cout << "sentido centro-oeste" << std::endl;
+    flag.x = 1;
+    flag.y = 1;
+  }
+
+  // Without shifting
+  if ( (v.x == 0) && (v.y == 0) ){
+    start = Point(0, 0);
+    finish = Point(0, 0);
+  }
+  
+  limits.push_back(start);
+  limits.push_back(finish);
+  limits.push_back(flag);
+  return limits;
+}
+  

@@ -55,12 +55,48 @@ struct LinearFoveation {
     return intersectiony[k];
   }
 
-  inline void setIntersection(std::vector<int> pontox, std::vector<int> pontoy){
+  inline int getStartx(int k){
+    return startx[k];
+  }
+
+  inline int getStarty(int k){
+    return starty[k];
+  }
+
+  inline int getFinishx(int k){
+    return finishx[k];
+  }
+
+  inline int getFinishy(int k){
+    return finishy[k];
+  }
+
+  inline int getFlagx(int k){
+    return flagx[k];
+  }
+
+  inline int getFlagy(int k){
+    return flagy[k];
+  }
+  
+  inline void setIntersection(std::vector<int> pontox, std::vector<int> pontoy, std::vector<int> limits){
     intersectionx.clear();
     intersectiony.clear();
+    startx.clear();
+    starty.clear();
+    finishx.clear();
+    finishy.clear();
+    flagx.clear();
+    flagy.clear();
     for (unsigned int i = 0; i < pontox.size(); i++){
       intersectionx[i] = pontox[i];
       intersectiony[i] = pontoy[i];
+      startx[i] = limits[i*6];
+      starty[i] = limits[(i*6)+1];
+      finishx[i] = limits[(i*6)+2];
+      finishy[i] = limits[(i*6)+3];
+      flagx[i] = limits[(i*6)+4];
+      flagy[i] = limits[(i*6)+5];
     }
   }
 
@@ -93,9 +129,15 @@ struct LinearFoveation {
     assert(growthfactor >= 0);
 
     // Clean Intersection vectors
-    for (int i = 0; i < m; i++){
+    for (int i = 0; i < m+1; i++){
       intersectionx.push_back(0);
       intersectiony.push_back(0);
+      startx.push_back(0);
+      starty.push_back(0);
+      finishx.push_back(0);
+      finishy.push_back(0);
+      flagx.push_back(0);
+      flagy.push_back(0);
     }
     
   }
@@ -110,6 +152,9 @@ struct LinearFoveation {
   std::vector<int> level;
   std::vector<int> intersectionx;
   std::vector<int> intersectiony;
+  std::vector<int> startx, starty;
+  std::vector<int> finishx, finishy;
+  std::vector<int> flagx, flagy;
 };
 
 

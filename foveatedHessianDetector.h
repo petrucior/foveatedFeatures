@@ -207,15 +207,19 @@ static void calcLayerDetAndTrace( const Mat& sum, int size, int sampleStep,
 	resizeHaarPattern( dy_s , Dy , NY , 9, size, sum.cols );
 	resizeHaarPattern( dxy_s, Dxy, NXY, 9, size, sum.cols );
 
-	int intersectiony = params.foveaModel.getIntersectiony(k);
-	int intersectionx = params.foveaModel.getIntersectionx(k);
+	//int intersectiony = params.foveaModel.getIntersectiony(k);
+	//int intersectionx = params.foveaModel.getIntersectionx(k);
+	int startx = params.foveaModel.getStartx(k);
+	int starty = params.foveaModel.getStarty(k);
+	int finishx = params.foveaModel.getFinishx(k);
+	int finishy = params.foveaModel.getFinishy(k);
 
-	for(int  i = 0 + intersectiony; sum_i + size/2 <= limit_y; i++, sum_i += sampleStep ) {
+	for(int  i = 0 + starty; sum_i + size/2 <= limit_y - finishy; i++, sum_i += sampleStep ) {
 		sum_j = margin_x - size/2;
 		const int* sum_ptr = sum.ptr<int>(sum_i, sum_j);
 		float* det_ptr = &det.at<float>(i, 0);
 		float* trace_ptr = &trace.at<float>(i, 0);
-		for(int j = 0 + intersectionx; sum_j + size/2 <= limit_x; sum_j += sampleStep, j++ ) {
+		for(int j = 0 + startx; sum_j + size/2 <= limit_x - finishx; sum_j += sampleStep, j++ ) {
 			float dx  = calcHaarPattern( sum_ptr, Dx , 3 );
 			float dy  = calcHaarPattern( sum_ptr, Dy , 3 );
 			float dxy = calcHaarPattern( sum_ptr, Dxy, 4 );
@@ -431,14 +435,18 @@ void SURFFindInvoker::findMaximaInLayer( const Mat& sum, const Mat& mask_sum,
 
 	int step = (int)(dets[layer].step/dets[layer].elemSize());
 
-	int intersectiony = params.foveaModel.getIntersectiony(k);
-	int intersectionx = params.foveaModel.getIntersectionx(k);
+	//int intersectiony = params.foveaModel.getIntersectiony(k);
+	//int intersectionx = params.foveaModel.getIntersectionx(k);
+	int startx = params.foveaModel.getStartx(k);
+	int starty = params.foveaModel.getStarty(k);
+	int finishx = params.foveaModel.getFinishx(k);
+	int finishy = params.foveaModel.getFinishy(k);
 
-	for( int i = 0 + intersectiony; sum_i + size/2 <= limit_y; i++, sum_i += sampleStep ) {
+	for( int i = 0 + starty; sum_i + size/2 <= limit_y - finishy; i++, sum_i += sampleStep ) {
 		sum_j = margin_x - size/2;
 		const float* det_ptr = dets[layer].ptr<float>(i);
 		const float* trace_ptr = traces[layer].ptr<float>(i);
-		for(int j = 0 + intersectionx; sum_j + size/2 <= limit_x; sum_j += sampleStep, j++ ) {
+		for(int j = 0 + startx; sum_j + size/2 <= limit_x - finishx; sum_j += sampleStep, j++ ) {
 			float val0 = det_ptr[j];
 			if(val0 > hessianThreshold) {
 				/* The 3x3x3 neighbouring samples around the maxima.
@@ -615,6 +623,19 @@ static void drawFoveatedLevels(InputArray _img, FoveatedHessianDetectorParams pa
 		int sx = params.foveaModel.getSizex(i);
 		int sy = params.foveaModel.getSizey(i);
 		cv::rectangle(img, cv::Point(dx, dy), cv::Point(dx+sx, dy+sy), cv::Scalar(255, 255, 255));
+	}
+}
+
+//função para desenhar
+static void drawMultiFoveatedLevels(InputArray _img, FoveatedHessianDetectorParams params, cv::Scalar color) {
+	params.foveaModel.check();
+	Mat img = _img.getMat();
+	for(int i = 0; i <= params.foveaModel.m; i++) {
+		int dx = params.foveaModel.getDeltax(i);
+		int dy = params.foveaModel.getDeltay(i);
+		int sx = params.foveaModel.getSizex(i);
+		int sy = params.foveaModel.getSizey(i);
+		cv::rectangle(img, cv::Point(dx, dy), cv::Point(dx+sx, dy+sy), color);
 	}
 }
 
