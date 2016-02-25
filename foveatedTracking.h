@@ -103,7 +103,7 @@ struct FoveatedTracking {
 			modelPoints.clear();
 			imgPoints.clear();
 			overallDistance = 0;
-			for(int i = 0; i < matches.size(); i++) {
+			for(unsigned int i = 0; i < matches.size(); i++) {
 				DMatch m = matches[i];
 				modelPoints.push_back(modelKeypoints[m.queryIdx].pt);
 				imgPoints.push_back(imgKeypoints[m.trainIdx].pt);
