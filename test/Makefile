@@ -40,7 +40,7 @@ OBJS=
 #
 # A variável ALL indica os arquivos executáveis
 #
-all: match extract tracking
+all: match extract tracking multi
 
 #
 # Regra de compilação e ligação do executáveis
@@ -61,6 +61,13 @@ tracking: tracking.cpp $(DIR)/foveatedHessianDetector.h $(DIR)/foveatedTracking.
 	$(CC) $(LFLAGS) tracking.cpp `pkg-config --cflags --libs opencv` -o tracking $(LIBS) -O3
 
 #
+# Regra de compilação e ligação do executáveis
+# 
+multi: multifovea.cpp ../multiFoveation.h $(DIR)/foveatedHessianDetector.h
+	$(CC) $(LFLAGS) multifovea.cpp `pkg-config --cflags --libs opencv` -o multi $(LIBS) -O3
+
+
+#
 # Regra que elimina arquivos intermediários
 # 
 clean:
@@ -70,5 +77,5 @@ clean:
 # Regra que elimina arquivos intermediários e executável
 # 
 realclean:
-	rm -f *.o *.cpp~ match extract tracking
+	rm -f *.o *.cpp~ match extract tracking multi
 
