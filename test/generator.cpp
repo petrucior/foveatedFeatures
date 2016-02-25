@@ -18,6 +18,13 @@ int main(int argc, char** argv){
   
   FoveatedHessianDetectorParams params(image.cols, image.rows, "fovea3.yml");
   
+  SurfDescriptorExtractor extractor;
+  Mat descriptors1, descriptors2;
+  
+  // Detector and descriptors of template
+  detector.detect(temp, keypoints2);
+  extractor.compute(temp, keypoints2, descriptors2);
+  
   unsigned int maximo = 0;
   vector<unsigned int> maximos;
   vector<int> pointx, pointy;
@@ -30,16 +37,10 @@ int main(int argc, char** argv){
       params.foveaModel.setFovea(j, i);
       params.foveaModel.fixFovea();
       
+      // Detector and descriptors of image
       foveatedHessianDetector(image, Mat(), keypoints1, params);
-      //foveatedHessianDetector(temp, Mat(), keypoints2, params);
-      detector.detect(temp, keypoints2);
-      
-      // computing descriptors
-      SurfDescriptorExtractor extractor;
-      Mat descriptors1, descriptors2;
       extractor.compute(image, keypoints1, descriptors1);
-      extractor.compute(temp, keypoints2, descriptors2);
-
+      
       // matching descriptors
       BFMatcher matcher(NORM_L2);
       vector<DMatch> matches;
