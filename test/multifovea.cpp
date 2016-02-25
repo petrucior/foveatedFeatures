@@ -24,12 +24,12 @@ static void on_mouse(int event, int x, int y, int flags, void *_param){
 int main(int argc, char** argv){
   //MultiFoveation m(2);
   //m.intersection(0, 2);
-  //  Mat image = imread(argv[1], CV_LOAD_IMAGE_GRAYSCALE);
-  //  if ( image.empty() ) return -1;
-  //  std::vector<String> s;
-  //  s.push_back(argv[2]);
-  //  s.push_back(argv[3]);
-  //  MultiFoveation foveas(2, image, s);
+    // Mat image = imread(argv[1], CV_LOAD_IMAGE_GRAYSCALE);
+    // if ( image.empty() ) return -1;
+    // std::vector<String> s;
+    // s.push_back(argv[2]);
+    // s.push_back(argv[3]);
+    // MultiFoveation foveas(2, image, s);
   //FoveatedHessianDetectorParams p = foveas.getParams(0);
   //std::cout << p.nOctaveLayers << std::endl;
   //std::cout << p.foveaModel.fx << std::endl;

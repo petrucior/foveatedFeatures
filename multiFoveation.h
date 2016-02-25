@@ -137,6 +137,7 @@ MultiFoveation::MultiFoveation(int foveas, Mat image, std::vector<String> ymlFil
   std::vector<int> pontoy;
   std::vector<Point> limits;
   std::vector<int> limit;
+  params.clear();
   for (int i = 0; i < foveas; i++){
     FoveatedHessianDetectorParams p(image.cols, image.rows, ymlFile[i]);
     params.push_back(p);
@@ -144,8 +145,14 @@ MultiFoveation::MultiFoveation(int foveas, Mat image, std::vector<String> ymlFil
     if ( i != 0 ){
       for (int k = 0; k < m + 1; k++){
 	Point pontos = intersection(k, m, image.size(), i-1, i);
+	// Clear points
+	pontox.clear();
+	pontoy.clear();
 	pontox.push_back(pontos.x);
 	pontoy.push_back(pontos.y);
+	// Clear limits
+	limits.clear();
+	limit.clear();
 	limits = limitProcessing(pontos, i-1, i);
 	for (unsigned int k = 0; k < limits.size(); k++){
 	  pontos = limits[k];
