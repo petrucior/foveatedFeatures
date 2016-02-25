@@ -52,6 +52,7 @@ int main(int argc, char** argv){
     s.push_back(argv[i]);
   
   MultiFoveation foveas(argc-2, image, s);
+  std::cout << argc-2 << " Fóveas criadas" << std::endl;
   namedWindow("keypoints", 1);
   
   while(true){
