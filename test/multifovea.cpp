@@ -53,7 +53,6 @@ int main(int argc, char** argv){
     int b = rand() % 256; // 0 - 255
     colors.push_back(Scalar(b, g, r));
   }
-    
   
   while(true){
     vector<KeyPoint> keypointSave;
