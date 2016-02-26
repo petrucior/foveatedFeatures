@@ -57,6 +57,7 @@
 #ifndef FOVEATED_HESSIANDETECTOR
 #define FOVEATED_HESSIANDETECTOR
 
+#include <stdio.h>
 #include "opencv2/opencv.hpp"
 #include "opencv2/core/core.hpp"
 #include "linearFoveation.h"
@@ -642,7 +643,7 @@ static void drawFoveatedLevels(InputArray _img, FoveatedHessianDetectorParams pa
 }
 
 //função para desenhar
-static void drawMultiFoveatedLevels(InputArray _img, FoveatedHessianDetectorParams params, cv::Scalar color) {
+static void drawMultiFoveatedLevels(InputArray _img, FoveatedHessianDetectorParams params, int fovea, cv::Scalar color) {
   params.foveaModel.check();
   Mat img = _img.getMat();
   for(int i = 0; i <= params.foveaModel.m; i++) {
@@ -652,6 +653,9 @@ static void drawMultiFoveatedLevels(InputArray _img, FoveatedHessianDetectorPara
     int sy = params.foveaModel.getSizey(i);
     cv::rectangle(img, cv::Point(dx, dy), cv::Point(dx+sx, dy+sy), color);
   }
+  char buffer[50];
+  sprintf(buffer, "Fovea %d", fovea);
+  putText(img, buffer, Point(10, (10*fovea)+10), FONT_HERSHEY_SIMPLEX, 0.25, color, 1, 1);
 }
 
 
