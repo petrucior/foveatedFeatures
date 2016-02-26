@@ -223,19 +223,17 @@ static void calcLayerDetAndTrace( const Mat& sum, int size, int sampleStep,
     float* det_ptr = &det.at<float>(i, 0);
     float* trace_ptr = &trace.at<float>(i, 0);
     for(int j = 0 + startx; sum_j + size/2 <= limit_x - finishx; sum_j += sampleStep, j++ ) {
-      
-      // Precisa rever os vetores dos limites da interseção
-      /*if ( ( (flagx == 0) && (flagy == 0) && (j > intersectionx) && (i < limit_y - intersectiony) ) ||
+      if ( ( (flagx == 0) && (flagy == 0) && (j > intersectionx) && (i < limit_y - intersectiony) ) ||
 	   ( (flagx == 0) && (flagy == 1) && (j > intersectionx) && (i > intersectiony) ) ||
 	   ( (flagx == 1) && (flagy == 0) && (j < limit_x - intersectionx) && (i < limit_y - intersectiony) ) ||
-	   ( (flagx == 1) && (flagy == 1) && (j < limit_x - intersectionx) && (i > intersectiony) ) ){*/
+	   ( (flagx == 1) && (flagy == 1) && (j < limit_x - intersectionx) && (i > intersectiony) ) ){
 	float dx  = calcHaarPattern( sum_ptr, Dx , 3 );
 	float dy  = calcHaarPattern( sum_ptr, Dy , 3 );
 	float dxy = calcHaarPattern( sum_ptr, Dxy, 4 );
 	sum_ptr += sampleStep;
 	det_ptr[j] = dx*dy - 0.81f*dxy*dxy;
 	trace_ptr[j] = dx + dy;
-	//}
+      }
 
     }
   }
@@ -460,11 +458,10 @@ void SURFFindInvoker::findMaximaInLayer( const Mat& sum, const Mat& mask_sum,
     const float* det_ptr = dets[layer].ptr<float>(i);
     const float* trace_ptr = traces[layer].ptr<float>(i);
     for(int j = 0 + startx; sum_j + size/2 <= limit_x - finishx; sum_j += sampleStep, j++ ) {
-      // Necessita rever a interseção assim como no anterior
-      /*if ( ( (flagx == 0) && (flagy == 0) && (j > intersectionx) && (i < limit_y - intersectiony) ) ||
+      if ( ( (flagx == 0) && (flagy == 0) && (j > intersectionx) && (i < limit_y - intersectiony) ) ||
 	   ( (flagx == 0) && (flagy == 1) && (j > intersectionx) && (i > intersectiony) ) ||
 	   ( (flagx == 1) && (flagy == 0) && (j < limit_x - intersectionx) && (i < limit_y - intersectiony) ) ||
-	   ( (flagx == 1) && (flagy == 1) && (j < limit_x - intersectionx) && (i > intersectiony) ) ){*/
+	   ( (flagx == 1) && (flagy == 1) && (j < limit_x - intersectionx) && (i > intersectiony) ) ){
 	float val0 = det_ptr[j];
 	if(val0 > hessianThreshold) {
 	  /* The 3x3x3 neighbouring samples around the maxima.
@@ -521,7 +518,7 @@ void SURFFindInvoker::findMaximaInLayer( const Mat& sum, const Mat& mask_sum,
 		  keypoints.push_back(kpt);
 		}
 	    }
-	  //}
+	}
       }
     }
   }
