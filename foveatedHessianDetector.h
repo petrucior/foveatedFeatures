@@ -207,34 +207,19 @@ static void calcLayerDetAndTrace( const Mat& sum, int size, int sampleStep,
   resizeHaarPattern( dx_s , Dx , NX , 9, size, sum.cols );
   resizeHaarPattern( dy_s , Dy , NY , 9, size, sum.cols );
   resizeHaarPattern( dxy_s, Dxy, NXY, 9, size, sum.cols );
-
-  int intersectiony = params.foveaModel.getIntersectiony(k);
-  int intersectionx = params.foveaModel.getIntersectionx(k);
-  int startx = params.foveaModel.getStartx(k);
-  int starty = params.foveaModel.getStarty(k);
-  int finishx = params.foveaModel.getFinishx(k);
-  int finishy = params.foveaModel.getFinishy(k);
-  int flagx = params.foveaModel.getFlagx(k);
-  int flagy = params.foveaModel.getFlagy(k);
     
-  for(int  i = 0 + starty; sum_i + size/2 <= limit_y - finishy; i++, sum_i += sampleStep ) {
+  for(int  i = 0; sum_i + size/2 <= limit_y; i++, sum_i += sampleStep ) {
     sum_j = margin_x - size/2;
     const int* sum_ptr = sum.ptr<int>(sum_i, sum_j);
     float* det_ptr = &det.at<float>(i, 0);
     float* trace_ptr = &trace.at<float>(i, 0);
-    for(int j = 0 + startx; sum_j + size/2 <= limit_x - finishx; sum_j += sampleStep, j++ ) {
-      if ( ( (flagx == 0) && (flagy == 0) && (j > intersectionx) && (i < limit_y - intersectiony) ) ||
-	   ( (flagx == 0) && (flagy == 1) && (j > intersectionx) && (i > intersectiony) ) ||
-	   ( (flagx == 1) && (flagy == 0) && (j < limit_x - intersectionx) && (i < limit_y - intersectiony) ) ||
-	   ( (flagx == 1) && (flagy == 1) && (j < limit_x - intersectionx) && (i > intersectiony) ) ){
-	float dx  = calcHaarPattern( sum_ptr, Dx , 3 );
-	float dy  = calcHaarPattern( sum_ptr, Dy , 3 );
-	float dxy = calcHaarPattern( sum_ptr, Dxy, 4 );
-	sum_ptr += sampleStep;
-	det_ptr[j] = dx*dy - 0.81f*dxy*dxy;
-	trace_ptr[j] = dx + dy;
-      }
-
+    for(int j = 0; sum_j + size/2 <= limit_x; sum_j += sampleStep, j++ ) {
+      float dx  = calcHaarPattern( sum_ptr, Dx , 3 );
+      float dy  = calcHaarPattern( sum_ptr, Dy , 3 );
+      float dxy = calcHaarPattern( sum_ptr, Dxy, 4 );
+      sum_ptr += sampleStep;
+      det_ptr[j] = dx*dy - 0.81f*dxy*dxy;
+      trace_ptr[j] = dx + dy;
     }
   }
 }
@@ -443,82 +428,68 @@ void SURFFindInvoker::findMaximaInLayer( const Mat& sum, const Mat& mask_sum,
     resizeHaarPattern( dm, &Dm, NM, 9, size, mask_sum.cols );
 
   int step = (int)(dets[layer].step/dets[layer].elemSize());
-
-  int intersectiony = params.foveaModel.getIntersectiony(k);
-  int intersectionx = params.foveaModel.getIntersectionx(k);
-  int startx = params.foveaModel.getStartx(k);
-  int starty = params.foveaModel.getStarty(k);
-  int finishx = params.foveaModel.getFinishx(k);
-  int finishy = params.foveaModel.getFinishy(k);
-  int flagx = params.foveaModel.getFlagx(k);
-  int flagy = params.foveaModel.getFlagy(k);
-
-  for( int i = 0 + starty; sum_i + size/2 <= limit_y - finishy; i++, sum_i += sampleStep ) {
+  
+  for( int i = 0; sum_i + size/2 <= limit_y; i++, sum_i += sampleStep ) {
     sum_j = margin_x - size/2;
     const float* det_ptr = dets[layer].ptr<float>(i);
     const float* trace_ptr = traces[layer].ptr<float>(i);
-    for(int j = 0 + startx; sum_j + size/2 <= limit_x - finishx; sum_j += sampleStep, j++ ) {
-      if ( ( (flagx == 0) && (flagy == 0) && (j > intersectionx) && (i < limit_y - intersectiony) ) ||
-	   ( (flagx == 0) && (flagy == 1) && (j > intersectionx) && (i > intersectiony) ) ||
-	   ( (flagx == 1) && (flagy == 0) && (j < limit_x - intersectionx) && (i < limit_y - intersectiony) ) ||
-	   ( (flagx == 1) && (flagy == 1) && (j < limit_x - intersectionx) && (i > intersectiony) ) ){
-	float val0 = det_ptr[j];
-	if(val0 > hessianThreshold) {
-	  /* The 3x3x3 neighbouring samples around the maxima.
-	     The maxima is included at N9[1][4] */
-	  const float *det1 = &dets[layer-1].at<float>(i, j);
-	  const float *det2 = &dets[layer].at<float>(i, j);
-	  const float *det3 = &dets[layer+1].at<float>(i, j);
-	  float N9[3][9] = { { det1[-step-1], det1[-step], det1[-step+1],
-			       det1[-1]  , det1[0] , det1[1],
-			       det1[step-1] , det1[step] , det1[step+1]  },
-			     { det2[-step-1], det2[-step], det2[-step+1],
-			       det2[-1]  , det2[0] , det2[1],
-			       det2[step-1] , det2[step] , det2[step+1]  },
-			     { det3[-step-1], det3[-step], det3[-step+1],
-			       det3[-1]  , det3[0] , det3[1],
-			       det3[step-1] , det3[step] , det3[step+1]  } };
+    for(int j = 0; sum_j + size/2 <= limit_x; sum_j += sampleStep, j++ ) {
+      float val0 = det_ptr[j];
+      if(val0 > hessianThreshold) {
+	/* The 3x3x3 neighbouring samples around the maxima.
+	   The maxima is included at N9[1][4] */
+	const float *det1 = &dets[layer-1].at<float>(i, j);
+	const float *det2 = &dets[layer].at<float>(i, j);
+	const float *det3 = &dets[layer+1].at<float>(i, j);
+	float N9[3][9] = { { det1[-step-1], det1[-step], det1[-step+1],
+			     det1[-1]  , det1[0] , det1[1],
+			     det1[step-1] , det1[step] , det1[step+1]  },
+			   { det2[-step-1], det2[-step], det2[-step+1],
+			     det2[-1]  , det2[0] , det2[1],
+			     det2[step-1] , det2[step] , det2[step+1]  },
+			   { det3[-step-1], det3[-step], det3[-step+1],
+			     det3[-1]  , det3[0] , det3[1],
+			     det3[step-1] , det3[step] , det3[step+1]  } };
 
-	  /* Check the mask - why not just check the mask at the center of the wavelet? */
-	  if( !mask_sum.empty() )
-	    {
-	      const int* mask_ptr = &mask_sum.at<int>(sum_i, sum_j);
-	      float mval = calcHaarPattern( mask_ptr, &Dm, 1 );
-	      if( mval < 0.5 )
-		continue;
-	    }
+	/* Check the mask - why not just check the mask at the center of the wavelet? */
+	if( !mask_sum.empty() )
+	  {
+	    const int* mask_ptr = &mask_sum.at<int>(sum_i, sum_j);
+	    float mval = calcHaarPattern( mask_ptr, &Dm, 1 );
+	    if( mval < 0.5 )
+	      continue;
+	  }
 
-	  /* Non-maxima suppression. val0 is at N9[1][4]*/
-	  if( val0 > N9[0][0] && val0 > N9[0][1] && val0 > N9[0][2] &&
-	      val0 > N9[0][3] && val0 > N9[0][4] && val0 > N9[0][5] &&
-	      val0 > N9[0][6] && val0 > N9[0][7] && val0 > N9[0][8] &&
-	      val0 > N9[1][0] && val0 > N9[1][1] && val0 > N9[1][2] &&
-	      val0 > N9[1][3]                    && val0 > N9[1][5] &&
-	      val0 > N9[1][6] && val0 > N9[1][7] && val0 > N9[1][8] &&
-	      val0 > N9[2][0] && val0 > N9[2][1] && val0 > N9[2][2] &&
-	      val0 > N9[2][3] && val0 > N9[2][4] && val0 > N9[2][5] &&
-	      val0 > N9[2][6] && val0 > N9[2][7] && val0 > N9[2][8] )
-	    {
-	      /* Calculate the wavelet center coordinates for the maxima */
-	      float center_i = sum_i + (size-1)*0.5f;
-	      float center_j = sum_j + (size-1)*0.5f;
+	/* Non-maxima suppression. val0 is at N9[1][4]*/
+	if( val0 > N9[0][0] && val0 > N9[0][1] && val0 > N9[0][2] &&
+	    val0 > N9[0][3] && val0 > N9[0][4] && val0 > N9[0][5] &&
+	    val0 > N9[0][6] && val0 > N9[0][7] && val0 > N9[0][8] &&
+	    val0 > N9[1][0] && val0 > N9[1][1] && val0 > N9[1][2] &&
+	    val0 > N9[1][3]                    && val0 > N9[1][5] &&
+	    val0 > N9[1][6] && val0 > N9[1][7] && val0 > N9[1][8] &&
+	    val0 > N9[2][0] && val0 > N9[2][1] && val0 > N9[2][2] &&
+	    val0 > N9[2][3] && val0 > N9[2][4] && val0 > N9[2][5] &&
+	    val0 > N9[2][6] && val0 > N9[2][7] && val0 > N9[2][8] )
+	  {
+	    /* Calculate the wavelet center coordinates for the maxima */
+	    float center_i = sum_i + (size-1)*0.5f;
+	    float center_j = sum_j + (size-1)*0.5f;
 
-	      KeyPoint kpt( center_j, center_i, (float)sizes[layer],
-			    -1, val0, octave, CV_SIGN(trace_ptr[j]) );
+	    KeyPoint kpt( center_j, center_i, (float)sizes[layer],
+			  -1, val0, octave, CV_SIGN(trace_ptr[j]) );
 
-	      /* Interpolate maxima location within the 3x3x3 neighbourhood  */
-	      int ds = size - sizes[layer-1];
-	      int interp_ok = interpolateKeypoint( N9, sampleStep, sampleStep, ds, kpt );
+	    /* Interpolate maxima location within the 3x3x3 neighbourhood  */
+	    int ds = size - sizes[layer-1];
+	    int interp_ok = interpolateKeypoint( N9, sampleStep, sampleStep, ds, kpt );
 
-	      /* Sometimes the interpolation step gives a negative size etc. */
-	      if( interp_ok  )
-		{
-		  /*printf( "KeyPoint %f %f %d\n", point.pt.x, point.pt.y, point.size );*/
-		  cv::AutoLock lock(findMaximaInLayer_m);
-		  keypoints.push_back(kpt);
-		}
-	    }
-	}
+	    /* Sometimes the interpolation step gives a negative size etc. */
+	    if( interp_ok  )
+	      {
+		/*printf( "KeyPoint %f %f %d\n", point.pt.x, point.pt.y, point.size );*/
+		cv::AutoLock lock(findMaximaInLayer_m);
+		keypoints.push_back(kpt);
+	      }
+	  }
       }
     }
   }
@@ -656,6 +627,8 @@ static void drawMultiFoveatedLevels(InputArray _img, FoveatedHessianDetectorPara
   char buffer[50];
   sprintf(buffer, "Fovea %d", fovea);
   putText(img, buffer, Point(10, (10*fovea)+10), FONT_HERSHEY_SIMPLEX, 0.25, color, 1, 1);
+  
+  cv::rectangle(img, cv::Point(0, 0), cv::Point(0, 0), cv::Scalar(255, 255, 255));
 }
 
 

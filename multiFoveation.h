@@ -37,6 +37,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
+#include <utility>
 #include <vector>
 #include "foveatedHessianDetector.h"
 #include "opencv2/core/core.hpp"
@@ -92,7 +93,7 @@ struct MultiFoveation{
   FoveatedHessianDetectorParams getParams(int fovea);
   
   /**
-   * \fn Point intersection(int k, int m, Size R, int fovea1, int fovea2);
+   * \fn Point intersection(float k, int m, Size R, int fovea1, int fovea2);
    *
    * \brief Function for calculate the intersection between foveae.
    *
@@ -104,7 +105,7 @@ struct MultiFoveation{
    *
    * \return Point of intersection between foveae.
    */
-  Point intersection(int k, int m, Size R, int fovea1, int fovea2);
+  Point intersection(float k, int m, Size R, int fovea1, int fovea2);
   
   /**
    * \fn std::vector<Point> limitProcessing(Point pointIntersection, int fovea1, int fovea2);
@@ -143,24 +144,28 @@ MultiFoveation::MultiFoveation(int foveas, Mat image, std::vector<String> ymlFil
     params.push_back(p);
     int m = params[i].foveaModel.m;
     if ( i != 0 ){
-      for (int k = 0; k < m + 1; k++){
-	Point pontos = intersection(k, m, image.size(), i-1, i);
-	// Clear points
-	pontox.clear();
-	pontoy.clear();
-	pontox.push_back(pontos.x);
-	pontoy.push_back(pontos.y);
-	// Clear limits
-	limits.clear();
-	limit.clear();
-	limits = limitProcessing(pontos, i-1, i);
-	for (unsigned int k = 0; k < limits.size(); k++){
-	  pontos = limits[k];
-	  limit.push_back(pontos.x);
-	  limit.push_back(pontos.y);
+      // Loop to processing foveae processed
+      for (int j = 0; j < i; j++){
+	// Loop to processing levels
+	for (int k = 0; k < m+1; k++){
+	  Point pontos = intersection(k, m, image.size(), j, i);
+	  // Clear points
+	  pontox.clear();
+	  pontoy.clear();
+	  pontox.push_back(pontos.x);
+	  pontoy.push_back(pontos.y);
+	  // Clear limits
+	  limits.clear();
+	  limit.clear();
+	  limits = limitProcessing(pontos, j, i);
+	  for (unsigned int k = 0; k < limits.size(); k++){
+	    pontos = limits[k];
+	    limit.push_back(pontos.x);
+	    limit.push_back(pontos.y);
+	  }
 	}
+	params[i].foveaModel.setIntersection(pontox, pontoy, limit);
       }
-      params[i].foveaModel.setIntersection(pontox, pontoy, limit);
     }
   }
   // DEBUG
@@ -199,7 +204,7 @@ MultiFoveation::getParams(int fovea){
 }
 
 /**
- * \fn Point intersection(int k, int m, Size R, int fovea1, int fovea2);
+ * \fn Point intersection(float k, int m, Size R, int fovea1, int fovea2);
  *
  * \brief Function for calculate the intersection between foveae.
  *
@@ -212,11 +217,11 @@ MultiFoveation::getParams(int fovea){
  * \return Point of intersection between foveae.
  */
 Point 
-MultiFoveation::intersection(int k, int m, Size R, int fovea1, int fovea2){
+MultiFoveation::intersection(float k, int m, Size R, int fovea1, int fovea2){
   FoveatedHessianDetectorParams f1, f2;
   f1 = params[fovea1];
   f2 = params[fovea2];
-  Point p = Point(0, 0);
+  Point p = Point(-1, -1);
   //
   // Implementação considera m1 == m2 ( necessita encontrar a equação para não depender desta condição )
   //
@@ -232,16 +237,22 @@ MultiFoveation::intersection(int k, int m, Size R, int fovea1, int fovea2){
   p1 = max( max(f1.foveaModel.fx+(R.width/2), f2.foveaModel.fx+(R.width/2)) - wmax , min(f1.foveaModel.fx+(R.width/2), f2.foveaModel.fx+(R.width/2)) + wmin );
   p2 = min( max(f1.foveaModel.fx+(R.width/2), f2.foveaModel.fx+(R.width/2)) - wmax , min(f1.foveaModel.fx+(R.width/2), f2.foveaModel.fx+(R.width/2)) + wmin );
   
+  // Verify if p2 is minor or p1 is major that foveae
+  if ( (min(f1.foveaModel.fx+(R.width/2), f2.foveaModel.fx+(R.width/2))) > p2 ||
+       (max(f1.foveaModel.fx+(R.width/2), f2.foveaModel.fx+(R.width/2))) < p1 ) 
+    std::swap(p1, p2);
+  
   // DEBUG
-  /*std::cout << "f1.x = " << f1.foveaModel.fx << ", f2.x = " << f2.foveaModel.fx << std::endl;
+  /*std::cout << "k = " << k << ", m = " << m << std::endl;
+  std::cout << "f1.x = " << f1.foveaModel.fx+(R.width/2) << ", f2.x = " << f2.foveaModel.fx+(R.width/2) << std::endl;
   std::cout << "p1 = " << p1 << ", p2 = " << p2 << std::endl;
   std::cout << "wmax = " << wmax << ", wmin = " << wmin << std::endl;*/
   // Component x axis
-  if ( min(f1.foveaModel.fx+(R.width/2), f2.foveaModel.fx+(R.width/2)) == f1.foveaModel.fx+(R.width/2) ){ // Fóvea 1 mais próxima da origem
+  if ( min(f1.foveaModel.fx+(R.width/2), f2.foveaModel.fx+(R.width/2)) == f2.foveaModel.fx+(R.width/2) ){ // Fóvea 2 mais próxima da origem
     p.x = ( k * p1 )/m;
   }
-  else{ // Fóvea 2 mais próxima da origem
-    p.x = ( (R.width * m) - (R.width * k) + (p2 * k) )/m;
+  else{ // Fóvea 1 mais próxima da origem
+    p.x = ( (R.width * m) - (R.width * k) + (p2 * k) )/ m;
   }
   
   //
@@ -253,18 +264,40 @@ MultiFoveation::intersection(int k, int m, Size R, int fovea1, int fovea2){
   // p1 e p2
   p1 = max( max(f1.foveaModel.fy+(R.height/2), f2.foveaModel.fy+(R.height/2)) - wmax , min(f1.foveaModel.fy+(R.height/2), f2.foveaModel.fy+(R.height/2)) + wmin );
   p2 = min( max(f1.foveaModel.fy+(R.height/2), f2.foveaModel.fy+(R.height/2)) - wmax , min(f1.foveaModel.fy+(R.height/2), f2.foveaModel.fy+(R.height/2)) + wmin );
+
+  // Verify if p2 is minor or p1 is major that foveae
+  if ( (min(f1.foveaModel.fy+(R.width/2), f2.foveaModel.fy+(R.width/2))) > p2 ||
+       (max(f1.foveaModel.fy+(R.width/2), f2.foveaModel.fy+(R.width/2))) < p1 ) 
+    std::swap(p1, p2);
+
   // DEBUG
   /*std::cout << "f1.y = " << f1.foveaModel.fy << ", f2.y = " << f2.foveaModel.fy << std::endl;
   std::cout << "p1 = " << p1 << ", p2 = " << p2 << std::endl;
   std::cout << "wmax = " << wmax << ", wmin = " << wmin << std::endl;*/
   // Component y axis
-  if ( min(f1.foveaModel.fy+(R.height/2), f2.foveaModel.fy+(R.height/2)) == f1.foveaModel.fy+(R.height/2) ){ // Fóvea 1 mais próxima da origem
+  if ( min(f1.foveaModel.fy+(R.height/2), f2.foveaModel.fy+(R.height/2)) == f2.foveaModel.fy+(R.height/2) ){ // Fóvea 2 mais próxima da origem
     p.y = ( k * p1 )/m;
   }
-  else{ // Fóvea 2 mais próxima da origem
+  else{ // Fóvea 1 mais próxima da origem
     p.y = ( (R.height * m) - (R.height * k) + (p2 * k) )/m;
   }
+
   
+  // Verify if the fovea1 is equal fovea2
+  if ( f1.foveaModel.fx+(R.width/2) == f2.foveaModel.fx+(R.width/2) ) p.x = f1.foveaModel.getDeltax(k);
+  if ( f1.foveaModel.fy+(R.height/2) == f2.foveaModel.fy+(R.height/2) ) p.y = f1.foveaModel.getDeltay(k);
+
+  // Verify if the intersection is between layers
+  if ( ( !(p.x < f1.foveaModel.fx+(R.width/2) + (f1.foveaModel.getSizex(k)/2)) &&
+	 !(p.x > f2.foveaModel.fx+(R.width/2) - (f2.foveaModel.getSizex(k)/2)) ) ||
+       ( !(p.y < f1.foveaModel.fy+(R.height/2) + (f1.foveaModel.getSizey(k)/2)) &&
+	 !(p.y > f2.foveaModel.fy+(R.height/2) - (f2.foveaModel.getSizey(k)/2)) ) ){
+    // Not exist intersection between layers
+    p.x = -1;
+    p.y = -1;
+  }
+  
+  std::cout << "fovea1 = " << fovea1 << " e fovea2 = " << fovea2 << std::endl;
   std::cout << p.x << " | " << p.y << std::endl;
   
   return p;
