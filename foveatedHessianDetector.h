@@ -555,7 +555,7 @@ static void fastFoveatedHessianDetector( const Mat& sum, const Mat& mask_sum, ve
       if( 0 < layer && layer <= nOctaveLayers )
 	middleIndices[middleIndex++] = index;
       /*std::cout << index << " " << layer << ", sampleStep = " << sampleSteps[index] << "\t";
-	std::cout << "Size: " << sizes[index] << ", eta = " << params.eta[i] << std::endl;
+	std::cout << "Size: " << sizes[index] << ", eta = " << params.foveaModel.eta[i] << std::endl;
 	std::cout << "Size: " << sizes[index] << std::endl;
 	std::cout << "Margin: " << margin[index] << std::endl;*/
       index++;
