@@ -501,96 +501,6 @@ MultiFoveation::verifyRegion(int position, std::vector<Point> region, Point v){
   else return false;
 }
 
-
-/**
- * \fn std::vector<Point> updateLimit(std::vector<Point> limits);
- *
- * \brief Function for calculate the limit of processing
- *
- * \param limits - Vector of limits for update
- *
- * \return Vector of limits for region to be processed
- */
-/*std::vector<Point>
-MultiFoveation::updateLimit(std::vector<Point> limits){
-  std::vector<Point> region;
-  std::vector<Point> regionSearch;
-  bool atualized = false;
-  // Allocate limits.size() positions initiated with -1
-  int intercept[limits.size()][limits.size()];
-  // Clean intercept
-  for ( int i = 0; i < limits.size(); i++ )
-    for ( int j = 0; j < limits.size(); j++ )
-      intercept[i][j] = -1;
-  
-  for ( unsigned int i = 0; i < limits.size(); i+=2 ){
-    intercept[i][i] = i;
-    regionSearch.push_back(limits[i]);
-    regionSearch.push_back(limits[i+1]);
-    for ( unsigned int j = i+2; j < limits.size(); j+=2 ){
-      if ( intercept[i][j] == -1 ){
-        //std::cout << "i: " << i << ", j: " << j << std::endl;
-        // Build vertices ( clockwise direction )
-	Point v1 = limits[j];
-	Point v2 = Point((limits[j]).x+(limits[j+1]).x, (limits[j]).y);
-	Point v3 = Point((limits[j]).x+(limits[j+1]).x, (limits[j]).y+(limits[j+1]).y);
-	Point v4 = Point((limits[j]).x, (limits[j]).y+(limits[j+1]).y);
-	// Regions update
-	if ( verifyRegion(regionSearch, v1) ){
-	  std::cout << "opa1" << std::endl;
-	  intercept[i][j] = i;
-	  regionSearch[i+1].x -= (v1.x - regionSearch[i].x);
-	  regionSearch[i+1].y -= (v1.y - regionSearch[i].y);
-	  regionSearch[i] = v1;
-	  atualized = true;
-        }
-	if ( verifyRegion(regionSearch, v2) ){
-	  std::cout << "opa2" << std::endl;
-	  intercept[i][j] = i;
-	  regionSearch[i+1].x = (v2.x - regionSearch[i].x);
-	  regionSearch[i+1].y -= (v2.y - regionSearch[i].y);
-	  regionSearch[i].y = v2.y;
-	  atualized = true;
-        }
-        if ( verifyRegion(regionSearch, v3) ){
-	  std::cout << "opa3" << std::endl;
-	  intercept[i][j] = i;
-	  regionSearch[i+1].x = (v3.x - regionSearch[i].x);
-	  regionSearch[i+1].y = (v3.y - regionSearch[i].y);
-	  atualized = true;
-        }
-        if ( verifyRegion(regionSearch, v4) ){
-	  std::cout << "opa4" << std::endl;
-	  intercept[i][j] = i;
-	  regionSearch[i+1].x -= (v4.x - regionSearch[i].x);
-	  regionSearch[i+1].y = (v4.y - regionSearch[i].y);
-	  regionSearch[i].x = v4.x;
-	  atualized = true;
-	}
-      }
-      // Update intercept matrix
-      intercept[i+2][j] = intercept[i][j];
-    }
-
-    if ( atualized ){
-      region.push_back(regionSearch[i]);
-      region.push_back(regionSearch[i+1]);
-    }
-    atualized = false;
-    
-  }
-  
-  for (int i = 0; i < limits.size(); i++){
-    for (int j = 0; j < limits.size(); j++){
-      std::cout << intercept[i][j] << " ";
-    }
-    std::cout << std::endl;
-  }
-  
-  return region;
-}*/
-
-
 /**
  * \fn std::vector<Point> updateLimit(std::vector<Point> limits);
  *
@@ -649,6 +559,7 @@ MultiFoveation::updateLimit(std::vector<Point> limits){
       }
     }
     int control = 0;
+    // Region without intersection to set in final vector
     for (unsigned int k = i+2; k < limits.size(); k+=2){
       if ( ( intercepted[k] == -1 ) && ( k < limits.size()-(control+2) ) ){
         if ( intercepted[limits.size()-(control+2)] != -1 ){
@@ -670,9 +581,13 @@ MultiFoveation::updateLimit(std::vector<Point> limits){
       atualized = false;
     }
   }
-  /*for (unsigned i = 0; i < limits.size(); i+=2){
-    std::cout << intercepted[i] << " ";
+  // Add region without intersection
+  for (unsigned int i = 0; i < limits.size(); i+=2){
+    if ( ( intercepted[i] == -1 ) || ( limits.size() == 2 ) ){
+      region.push_back(regionSearch[i]);
+      region.push_back(regionSearch[i+1]);
+    }
   }
-  std::cout << std::endl;*/
+  
   return region;
 }
