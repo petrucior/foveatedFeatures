@@ -53,6 +53,10 @@ int main(int argc, char** argv){
     int b = rand() % 256; // 0 - 255
     colors.push_back(Scalar(b, g, r));
   }
+
+  // Eliminar a extração das features do código, pois estou testando o algoritmo
+  // de regiões
+  return -1;
   
   while(true){
     vector<KeyPoint> keypointSave;
