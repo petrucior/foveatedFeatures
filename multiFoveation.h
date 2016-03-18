@@ -159,8 +159,8 @@ struct MultiFoveation{
  *        ymlFile - Vector with yaml names.
  */
 MultiFoveation::MultiFoveation(int foveas, Mat image, std::vector<String> ymlFile){
-  /*std::vector<int> pontox;
-  std::vector<int> pontoy;
+  std::vector<int> delta;
+  std::vector<int> size;
   std::vector<Point> limits;
   std::vector<Point> limit;
   params.clear();
@@ -178,52 +178,34 @@ MultiFoveation::MultiFoveation(int foveas, Mat image, std::vector<String> ymlFil
 	  Point pontos = intersection(k, m, image.size(), j, i);
 	  limits = limitProcessing(k, pontos, j, i);
 	}
+	if (k == 0){
+	  limits[0] = Point(0, 0);
+	  limits[1] = Point(0, 0);
+	}
+	/*for (unsigned int v = 0; v < limits.size(); v+=2){
+	  std::cout << "(" << limits[v].x << ", " << limits[v].y << ")" << std::endl;
+	  std::cout << "(" << limits[v+1].x << ", " << limits[v+1].y << ")" << std::endl;
+	}*/
 	limit = updateLimit(limits);
+	// Update delta and size
+        for (unsigned int v = 0; v < limit.size(); v+=2){
+	  delta.push_back(limit[v].x); delta.push_back(limit[v].y);
+	  size.push_back(limit[v+1].x); size.push_back(limit[v+1].y);
+	  /*std::cout << "(" << limit[v].x << ", " << limit[v].y << ")" << std::endl;
+	  std::cout << "(" << limit[v+1].x << ", " << limit[v+1].y << ")" << std::endl;*/
+	}
+	//getParams(i).foveaModel.setMultiFoveation(delta, size, limit.size()/2);
+	delta.clear();
+	size.clear();
       }
     }
-  }*/
+  }
   
   // DEBUG
-  /*for (int i = 0; i < limits.size(); i++){
+  /*for (unsigned int i = 0; i < limits.size(); i++){
     Point p = limits[i];
     std::cout << p.x << " :::: " << p.y << std::endl;
   }*/
-  std::vector<Point> limit, limits;
-  limit.clear(); limits.clear();
-  Point inicio1 = Point(0, 0);
-  Point size1 = Point(10, 10);
-  Point inicio2 = Point(2, 2);
-  Point size2 = Point(6, 6);
-  Point inicio3 = Point(15, 15);
-  Point size3 = Point(5, 5);
-  Point inicio4 = Point(5, 5);
-  Point size4 = Point(12, 12);
-  limits.push_back(inicio1); limits.push_back(size1);
-  limits.push_back(inicio2); limits.push_back(size2);
-  limits.push_back(inicio3); limits.push_back(size3);
-  limits.push_back(inicio4); limits.push_back(size4);
-  
-  Point inicio5 = Point(3, 3);
-  Point size5 = Point(3, 3);
-  Point inicio6 = Point(4, 4);
-  Point size6 = Point(3, 3);
-  Point inicio7 = Point(2, 4);
-  Point size7 = Point(3, 3);
-  Point inicio8 = Point(2, 2);
-  Point size8 = Point(3, 3);
-  Point inicio9 = Point(4, 2);
-  Point size9 = Point(3, 3);
-  //limits.push_back(inicio5); limits.push_back(size5);
-  //limits.push_back(inicio6); limits.push_back(size6);
-  //limits.push_back(inicio7); limits.push_back(size7);
-  //limits.push_back(inicio8); limits.push_back(size8);
-  //limits.push_back(inicio9); limits.push_back(size9);
-
-  limit = updateLimit(limits);
-  for (int i = 0; i < limit.size(); i++){
-    Point p = limit[i];
-    std::cout << p.x << " :::: " << p.y << std::endl;
-  }
 }
 
 
@@ -289,10 +271,17 @@ MultiFoveation::intersection(float k, int m, Size R, int fovea1, int fovea2){
   p1 = max( max(f1.foveaModel.fx+(R.width/2), f2.foveaModel.fx+(R.width/2)) - wmax , min(f1.foveaModel.fx+(R.width/2), f2.foveaModel.fx+(R.width/2)) + wmin );
   p2 = min( max(f1.foveaModel.fx+(R.width/2), f2.foveaModel.fx+(R.width/2)) - wmax , min(f1.foveaModel.fx+(R.width/2), f2.foveaModel.fx+(R.width/2)) + wmin );
   
-  // Verify if p2 is minor or p1 is major that foveae
-  if ( (min(f1.foveaModel.fx+(R.width/2), f2.foveaModel.fx+(R.width/2))) > p2 ||
-       (max(f1.foveaModel.fx+(R.width/2), f2.foveaModel.fx+(R.width/2))) < p1 ) 
+  // Intersection between limits
+  if ( ( (f1.foveaModel.fx+(R.width/2)-(f1.foveaModel.getSizex(m)/2) < f2.foveaModel.fx+(R.width/2)-(f2.foveaModel.getSizex(m)/2)) &&
+	 (f1.foveaModel.fx+(R.width/2)-(f1.foveaModel.getSizex(m)/2) < f2.foveaModel.fx+(R.width/2)+(f2.foveaModel.getSizex(m)/2)) &&
+	 (f1.foveaModel.fx+(R.width/2)+(f1.foveaModel.getSizex(m)/2) > f2.foveaModel.fx+(R.width/2)-(f2.foveaModel.getSizex(m)/2)) &&
+	 (f1.foveaModel.fx+(R.width/2)+(f1.foveaModel.getSizex(m)/2) < f2.foveaModel.fx+(R.width/2)+(f2.foveaModel.getSizex(m)/2)) ) ||
+       ( (f1.foveaModel.fx+(R.width/2)-(f1.foveaModel.getSizex(m)/2) > f2.foveaModel.fx+(R.width/2)-(f2.foveaModel.getSizex(m)/2)) &&
+	 (f1.foveaModel.fx+(R.width/2)-(f1.foveaModel.getSizex(m)/2) < f2.foveaModel.fx+(R.width/2)+(f2.foveaModel.getSizex(m)/2)) &&
+	 (f1.foveaModel.fx+(R.width/2)+(f1.foveaModel.getSizex(m)/2) > f2.foveaModel.fx+(R.width/2)-(f2.foveaModel.getSizex(m)/2)) &&
+	 (f1.foveaModel.fx+(R.width/2)+(f1.foveaModel.getSizex(m)/2) > f2.foveaModel.fx+(R.width/2)+(f2.foveaModel.getSizex(m)/2)) ) )
     std::swap(p1, p2);
+  
   
   // DEBUG
   /*std::cout << "k = " << k << ", m = " << m << std::endl;
@@ -317,9 +306,15 @@ MultiFoveation::intersection(float k, int m, Size R, int fovea1, int fovea2){
   p1 = max( max(f1.foveaModel.fy+(R.height/2), f2.foveaModel.fy+(R.height/2)) - wmax , min(f1.foveaModel.fy+(R.height/2), f2.foveaModel.fy+(R.height/2)) + wmin );
   p2 = min( max(f1.foveaModel.fy+(R.height/2), f2.foveaModel.fy+(R.height/2)) - wmax , min(f1.foveaModel.fy+(R.height/2), f2.foveaModel.fy+(R.height/2)) + wmin );
 
-  // Verify if p2 is minor or p1 is major that foveae
-  if ( (min(f1.foveaModel.fy+(R.width/2), f2.foveaModel.fy+(R.width/2))) > p2 ||
-       (max(f1.foveaModel.fy+(R.width/2), f2.foveaModel.fy+(R.width/2))) < p1 ) 
+  // Intersection between limits
+  if ( ( (f1.foveaModel.fy+(R.width/2)-(f1.foveaModel.getSizey(m)/2) < f2.foveaModel.fy+(R.width/2)-(f2.foveaModel.getSizey(m)/2)) &&
+	 (f1.foveaModel.fy+(R.width/2)-(f1.foveaModel.getSizey(m)/2) < f2.foveaModel.fy+(R.width/2)+(f2.foveaModel.getSizey(m)/2)) &&
+	 (f1.foveaModel.fy+(R.width/2)+(f1.foveaModel.getSizey(m)/2) > f2.foveaModel.fy+(R.width/2)-(f2.foveaModel.getSizey(m)/2)) &&
+	 (f1.foveaModel.fy+(R.width/2)+(f1.foveaModel.getSizey(m)/2) < f2.foveaModel.fy+(R.width/2)+(f2.foveaModel.getSizey(m)/2)) ) ||
+       ( (f1.foveaModel.fy+(R.width/2)-(f1.foveaModel.getSizey(m)/2) > f2.foveaModel.fy+(R.width/2)-(f2.foveaModel.getSizey(m)/2)) &&
+	 (f1.foveaModel.fy+(R.width/2)-(f1.foveaModel.getSizey(m)/2) < f2.foveaModel.fy+(R.width/2)+(f2.foveaModel.getSizey(m)/2)) &&
+	 (f1.foveaModel.fy+(R.width/2)+(f1.foveaModel.getSizey(m)/2) > f2.foveaModel.fy+(R.width/2)-(f2.foveaModel.getSizey(m)/2)) &&
+	 (f1.foveaModel.fy+(R.width/2)+(f1.foveaModel.getSizey(m)/2) > f2.foveaModel.fy+(R.width/2)+(f2.foveaModel.getSizey(m)/2)) ) )
     std::swap(p1, p2);
 
   // DEBUG
@@ -410,7 +405,7 @@ MultiFoveation::limitProcessing(float k, Point pointIntersection, int fovea1, in
   
   // Diagonal shifting
   if ( (v.x > 0) && (v.y < 0) ){ // Deslocamento para o sentido nordeste
-    //std::cout << "sentido nordeste" << std::endl;
+    std::cout << "sentido nordeste" << std::endl;
     // Figura 1
     delta = Point(f2.foveaModel.getDeltax(k), f2.foveaModel.getDeltay(k));
     size = Point(f2.foveaModel.getSizex(k), pointIntersection.y - f2.foveaModel.getDeltay(k));
@@ -424,7 +419,7 @@ MultiFoveation::limitProcessing(float k, Point pointIntersection, int fovea1, in
     limits.push_back(size);
   }
   if ( (v.x > 0) && (v.y > 0) ){ // Deslocamento para o sentido sudeste
-    //std::cout << "sentido sudeste" << std::endl;
+    std::cout << "sentido sudeste" << std::endl;
     // Figura 1
     delta = Point(pointIntersection.x, f2.foveaModel.getDeltay(k));
     size = Point(f2.foveaModel.getSizex(k) - (pointIntersection.x - f2.foveaModel.getDeltax(k)), 
@@ -438,7 +433,7 @@ MultiFoveation::limitProcessing(float k, Point pointIntersection, int fovea1, in
     limits.push_back(size);
   }
   if ( (v.x < 0) && (v.y < 0) ){ // Deslocamento para o sentido norte
-    //std::cout << "sentido norte" << std::endl;
+    std::cout << "sentido norte" << std::endl;
     // Figura 1
     delta = Point(f2.foveaModel.getDeltax(k), f2.foveaModel.getDeltay(k));
     size = Point(f2.foveaModel.getSizex(k), pointIntersection.y - f2.foveaModel.getDeltay(k));
@@ -446,13 +441,13 @@ MultiFoveation::limitProcessing(float k, Point pointIntersection, int fovea1, in
     limits.push_back(size);
     // Figura 2
     delta = Point(f2.foveaModel.getDeltax(k), pointIntersection.y);
-    size = Point(f2.foveaModel.getSizex(k) - (pointIntersection.x - f2.foveaModel.getDeltax(k)), 
+    size = Point(/*f2.foveaModel.getSizex(k) -*/ (pointIntersection.x - f2.foveaModel.getDeltax(k)), 
 		 f2.foveaModel.getSizey(k) - (pointIntersection.y - f2.foveaModel.getDeltay(k)));
     limits.push_back(delta);
     limits.push_back(size);
   }
   if ( (v.x < 0) && (v.y > 0) ){ // Deslocamento para o sentido centro-oeste
-    //std::cout << "sentido centro-oeste" << std::endl;
+    std::cout << "sentido centro-oeste" << std::endl;
     // Figura 1
     delta = Point(f2.foveaModel.getDeltax(k), f2.foveaModel.getDeltay(k));
     size = Point(pointIntersection.x - f2.foveaModel.getDeltax(k), pointIntersection.y - f2.foveaModel.getDeltay(k));

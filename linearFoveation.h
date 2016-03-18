@@ -29,22 +29,57 @@ struct LinearFoveation {
     fx = fy = growthfactor = 0;
     wx = wy = ux = uy = 0;
     m = 0;
+    flag = false;
+    deltax.clear();
+    deltay.clear();
+    sizex.clear();
+    sizey.clear();
+    numberIntersection.clear();
   }
-
+  
   inline int getDeltax(int k) {
-    return (k*(ux - wx + 2*fx))/(2*m);
+    if ( !flag )
+      return (k*(ux - wx + 2*fx))/(2*m);
+    else
+      return deltax[k];
   }
 
   inline int getDeltay(int k) {
-    return (k*(uy - wy + 2*fy))/(2*m);
+    if ( !flag )
+      return (k*(uy - wy + 2*fy))/(2*m);
+    else
+      return deltay[k];
   }
 
   inline int getSizex(int k) {
-    return (k*wx - k*ux + m*ux)/m;
+    if ( !flag )
+      return (k*wx - k*ux + m*ux)/m;
+    else
+      return sizex[k];
   }
   
   inline int getSizey(int k) {
-    return (k*wy - k*uy + m*uy)/m;
+    if ( !flag )
+      return (k*wy - k*uy + m*uy)/m;
+    else
+      return sizey[k];
+  }
+
+  inline int getTam(int k){
+    return numberIntersection[k];
+  }
+
+  void setMultiFoveation(std::vector<int> _delta, std::vector<int> _size, int size){
+    for (unsigned i = 0; i < _delta.size(); i+=2){
+      deltax.push_back(_delta[i]);
+      deltay.push_back(_delta[i+1]);
+      sizex.push_back(_size[i]);
+      sizey.push_back(_size[i+1]);
+      numberIntersection.push_back(size);
+      /*std::cout << "(" << _delta[i] << ", " << _delta[i+1] << ")" << std::endl;
+      std::cout << "(" << _size[i] << ", " << _size[i+1] << ")" << std::endl;*/
+    }
+    flag = true;
   }
 
   //fix the fovea position: if fovea is outsite image domain, snap it to the closest valid position independently for each coordinate
@@ -84,6 +119,12 @@ struct LinearFoveation {
   std::vector<int> beta;
   std::vector<int> eta;
   std::vector<int> level;
+  bool flag;
+  std::vector<int> deltax;
+  std::vector<int> deltay;
+  std::vector<int> sizex;
+  std::vector<int> sizey;
+  std::vector<int> numberIntersection;
 };
 
 

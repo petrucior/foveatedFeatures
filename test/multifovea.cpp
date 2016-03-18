@@ -56,7 +56,7 @@ int main(int argc, char** argv){
 
   // Eliminar a extração das features do código, pois estou testando o algoritmo
   // de regiões
-  return -1;
+  //return -1;
   
   while(true){
     vector<KeyPoint> keypointSave;
