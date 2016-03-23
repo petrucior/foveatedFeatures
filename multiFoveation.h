@@ -179,22 +179,20 @@ MultiFoveation::MultiFoveation(int foveas, Mat image, std::vector<String> ymlFil
 	  limits = limitProcessing(k, pontos, j, i);
 	}
 	if (k == 0){
-	  limits[0] = Point(0, 0);
-	  limits[1] = Point(0, 0);
+	  for (unsigned int pts = 0; pts < limits.size(); pts+=2){
+	    limits[pts] = Point(0, 0);
+	    limits[pts+1] = Point(0, 0);
+	  }
 	}
-	/*for (unsigned int v = 0; v < limits.size(); v+=2){
-	  std::cout << "(" << limits[v].x << ", " << limits[v].y << ")" << std::endl;
-	  std::cout << "(" << limits[v+1].x << ", " << limits[v+1].y << ")" << std::endl;
-	}*/
 	limit = updateLimit(limits);
-	// Update delta and size
+        // Update delta and size
         for (unsigned int v = 0; v < limit.size(); v+=2){
 	  delta.push_back(limit[v].x); delta.push_back(limit[v].y);
 	  size.push_back(limit[v+1].x); size.push_back(limit[v+1].y);
-	  /*std::cout << "(" << limit[v].x << ", " << limit[v].y << ")" << std::endl;
-	  std::cout << "(" << limit[v+1].x << ", " << limit[v+1].y << ")" << std::endl;*/
+	  //std::cout << "(" << limit[v].x << ", " << limit[v].y << ")" << std::endl;
+	  //std::cout << "(" << limit[v+1].x << ", " << limit[v+1].y << ")" << std::endl;
 	}
-	//getParams(i).foveaModel.setMultiFoveation(delta, size, limit.size()/2);
+	params[i].foveaModel.setMultiFoveation(k, delta, size);
 	delta.clear();
 	size.clear();
       }
@@ -345,7 +343,7 @@ MultiFoveation::intersection(float k, int m, Size R, int fovea1, int fovea2){
   }
   
   //std::cout << "fovea1 = " << fovea1 << " e fovea2 = " << fovea2 << std::endl;
-  std::cout << p.x << " | " << p.y << std::endl;
+  //std::cout << p.x << " | " << p.y << std::endl;
   
   return p;
 }
@@ -367,10 +365,17 @@ MultiFoveation::limitProcessing(float k, Point pointIntersection, int fovea1, in
   FoveatedHessianDetectorParams f1, f2;
   f1 = params[fovea1];
   f2 = params[fovea2];
+  // Modificar v para o centro da região
   Point v = Point(f2.foveaModel.fx - f1.foveaModel.fx, f2.foveaModel.fy - f1.foveaModel.fy);
   std::vector<Point> limits;
   Point delta = Point(0, 0);
   Point size = Point(0, 0);
+  // Without intersection
+  if ( (pointIntersection.x == -1) && (pointIntersection.y == -1) ){
+    limits.push_back(delta);
+    limits.push_back(size);
+    return limits;
+  }
   // Horizontal shifting
   if ( (v.x > 0) && (v.y == 0) ){ // Shift out of origin
     //std::cout << "sentido horizontal positivo" << std::endl;
@@ -405,7 +410,7 @@ MultiFoveation::limitProcessing(float k, Point pointIntersection, int fovea1, in
   
   // Diagonal shifting
   if ( (v.x > 0) && (v.y < 0) ){ // Deslocamento para o sentido nordeste
-    std::cout << "sentido nordeste" << std::endl;
+    //std::cout << "sentido nordeste" << std::endl;
     // Figura 1
     delta = Point(f2.foveaModel.getDeltax(k), f2.foveaModel.getDeltay(k));
     size = Point(f2.foveaModel.getSizex(k), pointIntersection.y - f2.foveaModel.getDeltay(k));
@@ -419,7 +424,7 @@ MultiFoveation::limitProcessing(float k, Point pointIntersection, int fovea1, in
     limits.push_back(size);
   }
   if ( (v.x > 0) && (v.y > 0) ){ // Deslocamento para o sentido sudeste
-    std::cout << "sentido sudeste" << std::endl;
+    //std::cout << "sentido sudeste" << std::endl;
     // Figura 1
     delta = Point(pointIntersection.x, f2.foveaModel.getDeltay(k));
     size = Point(f2.foveaModel.getSizex(k) - (pointIntersection.x - f2.foveaModel.getDeltax(k)), 
@@ -433,7 +438,7 @@ MultiFoveation::limitProcessing(float k, Point pointIntersection, int fovea1, in
     limits.push_back(size);
   }
   if ( (v.x < 0) && (v.y < 0) ){ // Deslocamento para o sentido norte
-    std::cout << "sentido norte" << std::endl;
+    //std::cout << "sentido norte" << std::endl;
     // Figura 1
     delta = Point(f2.foveaModel.getDeltax(k), f2.foveaModel.getDeltay(k));
     size = Point(f2.foveaModel.getSizex(k), pointIntersection.y - f2.foveaModel.getDeltay(k));
@@ -441,13 +446,13 @@ MultiFoveation::limitProcessing(float k, Point pointIntersection, int fovea1, in
     limits.push_back(size);
     // Figura 2
     delta = Point(f2.foveaModel.getDeltax(k), pointIntersection.y);
-    size = Point(/*f2.foveaModel.getSizex(k) -*/ (pointIntersection.x - f2.foveaModel.getDeltax(k)), 
+    size = Point((pointIntersection.x - f2.foveaModel.getDeltax(k)), 
 		 f2.foveaModel.getSizey(k) - (pointIntersection.y - f2.foveaModel.getDeltay(k)));
     limits.push_back(delta);
     limits.push_back(size);
   }
   if ( (v.x < 0) && (v.y > 0) ){ // Deslocamento para o sentido centro-oeste
-    std::cout << "sentido centro-oeste" << std::endl;
+    //std::cout << "sentido centro-oeste" << std::endl;
     // Figura 1
     delta = Point(f2.foveaModel.getDeltax(k), f2.foveaModel.getDeltay(k));
     size = Point(pointIntersection.x - f2.foveaModel.getDeltax(k), pointIntersection.y - f2.foveaModel.getDeltay(k));
@@ -491,8 +496,8 @@ MultiFoveation::verifyRegion(int position, std::vector<Point> region, Point v){
   Point v_startPoint = Point(v.x - startPoint.x, v.y - startPoint.y);
   // Vector v - finishPoint
   Point v_finishPoint = Point(v.x - finishPoint.x, v.y - finishPoint.y);
-  if ( ( v_startPoint.x >= 0 ) && ( v_startPoint.y >= 0 ) &&
-       ( v_finishPoint.x <= 0 ) && ( v_finishPoint.y <= 0 ) ) return true;
+  if ( ( v_startPoint.x > 0 ) && ( v_startPoint.y > 0 ) &&
+       ( v_finishPoint.x < 0 ) && ( v_finishPoint.y < 0 ) ) return true;
   else return false;
 }
 
@@ -575,7 +580,11 @@ MultiFoveation::updateLimit(std::vector<Point> limits){
       region.push_back(regionSearch[i+1]);
       atualized = false;
     }
+    
+    if ( (i == 0) && (!atualized) ) intercepted[i] = -1;
+    
   }
+  
   // Add region without intersection
   for (unsigned int i = 0; i < limits.size(); i+=2){
     if ( ( intercepted[i] == -1 ) || ( limits.size() == 2 ) ){

@@ -1,5 +1,3 @@
-
-
 /*
   Copyright (C) 2014, Rafael Beserra <rafaelufrn@gmail.com>
   If you use this software for research purposes, consider citing the related paper: Rafael Beserra Gomes, Bruno Motta de Carvalho, Luiz Marcos Garcia Gonçalves, Visual attention guided features selection with foveated images, Neurocomputing, Volume 120, 23 November 2013, Pages 34-44, ISSN 0925-2312, http://dx.doi.org/10.1016/j.neucom.2012.10.033.
@@ -174,7 +172,7 @@ static void calcLayerDetAndTrace( const Mat& sum, int size, int sampleStep,
   int deltay = params.foveaModel.getDeltay(k);
   int skx = params.foveaModel.getSizex(k);
   int sky = params.foveaModel.getSizey(k);
-
+  
   //margin ref: centro da wavelet
   //margin_x ref: centro da wavelet
   int margin_x = MAX(marginH, deltax);
@@ -200,7 +198,7 @@ static void calcLayerDetAndTrace( const Mat& sum, int size, int sampleStep,
   */
 
   SurfHF Dx[NX], Dy[NY], Dxy[NXY];
-
+      
   if( size > sum.rows-1 || size > sum.cols-1 )
     return;
 
@@ -222,6 +220,7 @@ static void calcLayerDetAndTrace( const Mat& sum, int size, int sampleStep,
       trace_ptr[j] = dx + dy;
     }
   }
+  
 }
 
 
@@ -403,7 +402,7 @@ void SURFFindInvoker::findMaximaInLayer( const Mat& sum, const Mat& mask_sum,
   int deltay = params.foveaModel.getDeltay(k);
   int skx = params.foveaModel.getSizex(k);
   int sky = params.foveaModel.getSizey(k);
-
+  
   //margin ref: centro da wavelet
   //margin_x ref: centro da wavelet
   int margin_x = MAX(marginH, deltax);
