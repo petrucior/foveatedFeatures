@@ -167,6 +167,7 @@ MultiFoveation::MultiFoveation(int foveas, Mat image, std::vector<String> ymlFil
   for (int i = 0; i < foveas; i++){
     FoveatedHessianDetectorParams p(image.cols, image.rows, ymlFile[i]);
     params.push_back(p);
+    params[i].foveaModel.init();
     int m = params[i].foveaModel.m;
     if ( i != 0 ){
       // Loop to processing levels

@@ -34,7 +34,6 @@ struct LinearFoveation {
     deltay.clear();
     sizex.clear();
     sizey.clear();
-    numberIntersection.clear();
   }
   
   inline int getDeltax(int k) {
@@ -59,7 +58,7 @@ struct LinearFoveation {
   }
 
   inline int getQuantityOfIntersections(int k){
-    return numberIntersection[k];
+    return (int)deltax[k].size();
   }
 
   inline int getDeltax(int indice, int jump) {
@@ -77,6 +76,16 @@ struct LinearFoveation {
   inline int getSizey(int indice, int jump) {
     return sizey[indice][jump];
   }
+
+  bool positionCalculated(int linha, int coluna, int k){
+    for (int i = 0; i < getQuantityOfIntersections(k); i++){
+      if ( ( getDeltax(k, i) > coluna ) &&
+	   ( getDeltay(k, i) > linha ) &&
+	   ( getSizex(k, i) < coluna ) &&
+	   ( getSizey(k, i) < linha ) ) return false;
+    }
+    return true;
+  }
   
   void setMultiFoveation(int indice, std::vector<int> _delta, std::vector<int> _size){
     deltax[indice] = std::vector<int>((int)(_delta.size()/2));
@@ -91,7 +100,6 @@ struct LinearFoveation {
       sizey[indice][count] = _size[i+1];
       count++;
     }
-    numberIntersection.push_back(_delta.size()/2);
     flag = true;
   }
   
@@ -122,8 +130,11 @@ struct LinearFoveation {
       assert(level[i] >= 0 && level[i] <= m);
     }
     assert(growthfactor >= 0);
+    
+  }
 
-    // Iniciando os vetores
+  void init(){
+     // Iniciando os vetores
     deltax = std::vector<std::vector<int> >(m+1, std::vector<int>(0));
     deltay = std::vector<std::vector<int> >(m+1, std::vector<int>(0));
     sizex = std::vector<std::vector<int> >(m+1, std::vector<int>(0));
@@ -144,7 +155,6 @@ struct LinearFoveation {
   std::vector<int> sizex;
   std::vector<int> sizey;*/
   std::vector<std::vector<int> > deltax, deltay, sizex, sizey;
-  std::vector<int> numberIntersection;
 };
 
 
