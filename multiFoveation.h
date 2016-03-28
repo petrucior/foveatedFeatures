@@ -91,6 +91,15 @@ struct MultiFoveation{
    * \return The structure of params foveated.
    */
   FoveatedHessianDetectorParams getParams(int fovea);
+
+  /**
+   * \fn std::vector<FoveatedHessianDetectorParams> getVectorParams()
+   *
+   * \brief Get the vector with fovea params.
+   *
+   * \return The vector structure of params foveated.
+   */
+  std::vector<FoveatedHessianDetectorParams> getVectorParams();
   
   /**
    * \fn Point intersection(float k, int m, Size R, int fovea1, int fovea2);
@@ -217,9 +226,9 @@ MultiFoveation::MultiFoveation(int foveas, Mat image, std::vector<String> ymlFil
  */
 void 
 MultiFoveation::updateParams(int fovea){
-  if ( fovea != 0 ){
+  //if ( fovea != 0 ){
     // Update of fovea params
-  }
+  //}
 }
 
 /**
@@ -234,7 +243,21 @@ MultiFoveation::updateParams(int fovea){
 FoveatedHessianDetectorParams 
 MultiFoveation::getParams(int fovea){
   return params[fovea];
+  //return params[fovea];
 }
+
+/**
+ * \fn std::vector<FoveatedHessianDetectorParams> getVectorParams()
+ *
+ * \brief Get the vector with fovea params.
+ *
+ * \return The vector structure of params foveated.
+ */
+std::vector<FoveatedHessianDetectorParams> 
+MultiFoveation::getVectorParams(){
+  return params;
+}
+  
 
 /**
  * \fn Point intersection(float k, int m, Size R, int fovea1, int fovea2);
