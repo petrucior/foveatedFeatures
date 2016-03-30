@@ -53,20 +53,20 @@ int main(int argc, char** argv){
     int b = rand() % 256; // 0 - 255
     colors.push_back(Scalar(b, g, r));
   }
-
+  
   // Eliminar a extração das features do código, pois estou testando o algoritmo
   // de regiões
   //return -1;
-
+  
   int controlFoveaMove = 0;
   
+  vector<KeyPoint> keypointSave;
   while(true){
-    vector<KeyPoint> keypointSave;
     keypointSave.clear();
     // Detecting keypoints
     for (int i = 0; i < argc-2; i++){
       vector<KeyPoint> keypoints;
-      foveatedHessianDetector(image, Mat(), keypoints, params[i]);
+      foveatedHessianDetector(image, Mat(), keypoints, params[0]);
       for (unsigned int k = 0; k < keypoints.size(); k++)
 	keypointSave.push_back(keypoints[k]);
     }
@@ -88,8 +88,11 @@ int main(int argc, char** argv){
     if ( key == 'q' ) break;
     if ( key == 'm' ) // Control foveae
       ( controlFoveaMove + 1 < argc-2 ) ? controlFoveaMove++ : controlFoveaMove = 0;
+    
     // Function move foveae
     cvSetMouseCallback("keypoints", &on_mouse, &params[controlFoveaMove]);
+
+    //foveas.updateParams(0, Size(image.cols, image.rows));
 
   }
   

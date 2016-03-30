@@ -78,11 +78,12 @@ struct LinearFoveation {
   }
 
   bool positionCalculated(int linha, int coluna, int k){
+    //std::cout << "Deltax: " << getDeltax(k, 0) << " Deltay: " << getDeltay(k, 0) << " --- linha: " << linha << ", coluna: " << coluna << std::endl;
     for (int i = 0; i < getQuantityOfIntersections(k); i++){
-      if ( ( getDeltax(k, i) > coluna ) &&
-	   ( getDeltay(k, i) > linha ) &&
-	   ( getSizex(k, i) < coluna ) &&
-	   ( getSizey(k, i) < linha ) ) return false;
+      if ( ( getDeltax(k, i) < linha ) &&
+	   ( getDeltay(k, i) < coluna ) &&
+	   ( getDeltax(k, i) + getSizex(k, i) > linha ) &&
+	   ( getDeltay(k, i) + getSizey(k, i) > coluna ) ) return false;
     }
     return true;
   }
@@ -101,6 +102,10 @@ struct LinearFoveation {
       count++;
     }
     flag = true;
+    std::cout << "Delta" << std::endl;
+    std::cout << "(" << deltax[indice][0] << ", " << deltay[indice][0] << ")" << std::endl;
+    std::cout << "Size" << std::endl;
+    std::cout << "(" << sizex[indice][0] << ", " << sizey[indice][0] << ")" << std::endl;
   }
   
   //fix the fovea position: if fovea is outsite image domain, snap it to the closest valid position independently for each coordinate

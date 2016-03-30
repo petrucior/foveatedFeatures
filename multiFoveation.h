@@ -73,13 +73,14 @@ struct MultiFoveation{
   MultiFoveation(int foveas, Mat image, std::vector<String> ymlFile);
   
   /**
-   * \fn void updateParams(int fovea)
+   * \fn void updateParams(int fovea, Size R)
    *
    * \brief Update the params of fovea.
    *
    * \param fovea - The number of fovea
+   *        R - Size of image
    */
-  void updateParams(int fovea);
+  void updateParams(int fovea, Size R);
   
   /**
    * \fn FoveatedHessianDetectorParams getParams(int fovea)
@@ -218,17 +219,50 @@ MultiFoveation::MultiFoveation(int foveas, Mat image, std::vector<String> ymlFil
 
 
 /**
- * \fn void updateParams(int fovea)
+ * \fn void updateParams(int fovea, Size R)
  *
  * \brief Update the params of fovea.
  *
  * \param fovea - The number of fovea
+ *        R - Size of image
  */
 void 
-MultiFoveation::updateParams(int fovea){
-  //if ( fovea != 0 ){
-    // Update of fovea params
-  //}
+MultiFoveation::updateParams(int fovea, Size R){
+  std::vector<int> delta;
+  std::vector<int> size;
+  std::vector<Point> limits;
+  std::vector<Point> limit;
+  // Loop to processing params
+  for (unsigned int p = fovea; p < params.size(); p++){
+    int m = params[p].foveaModel.m;
+    // Loop to processing levels
+    for (int k = 0; k < m+1; k++){
+      limits.clear();
+      limit.clear();
+      // Loop to processing foveae processed
+      for (unsigned int j = 0; j < p; j++){
+	Point pontos = intersection(k, m, R, j, p);
+	limits = limitProcessing(k, pontos, j, p);
+      }
+      if (k == 0){
+	for (unsigned int pts = 0; pts < limits.size(); pts+=2){
+	  limits[pts] = Point(0, 0);
+	  limits[pts+1] = Point(0, 0);
+	}
+      }
+      limit = updateLimit(limits);
+      // Update delta and size
+      for (unsigned int v = 0; v < limit.size(); v+=2){
+	delta.push_back(limit[v].x); delta.push_back(limit[v].y);
+	size.push_back(limit[v+1].x); size.push_back(limit[v+1].y);
+	//std::cout << "(" << limit[v].x << ", " << limit[v].y << ")" << std::endl;
+	//std::cout << "(" << limit[v+1].x << ", " << limit[v+1].y << ")" << std::endl;
+      }
+      params[p].foveaModel.setMultiFoveation(k, delta, size);
+      delta.clear();
+      size.clear();
+    }
+  }
 }
 
 /**

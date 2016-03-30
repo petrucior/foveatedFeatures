@@ -214,7 +214,8 @@ static void calcLayerDetAndTrace( const Mat& sum, int size, int sampleStep,
     for(int j = 0; sum_j + size/2 <= limit_x; sum_j += sampleStep, j++ ) {
       
       if ( params.foveaModel.getFlag() ){ // Next Foveae
-	if ( !params.foveaModel.positionCalculated(sum_i-j, sum_j-i, foveaLevel) ){
+        //if ( !params.foveaModel.positionCalculated(sum_i-j, sum_j-i, foveaLevel) ){
+	if ( !params.foveaModel.positionCalculated(deltax+j, deltay+i, foveaLevel) ){
 	  float dx  = calcHaarPattern( sum_ptr, Dx , 3 );
 	  float dy  = calcHaarPattern( sum_ptr, Dy , 3 );
 	  float dxy = calcHaarPattern( sum_ptr, Dxy, 4 );
@@ -449,7 +450,8 @@ void SURFFindInvoker::findMaximaInLayer( const Mat& sum, const Mat& mask_sum,
     for(int j = 0; sum_j + size/2 <= limit_x; sum_j += sampleStep, j++ ) {
 
       if ( params.foveaModel.getFlag() ){ // Next Foveae
-	if ( !params.foveaModel.positionCalculated(sum_i-j, sum_j-i, foveaLevel) ){
+	//if ( !params.foveaModel.positionCalculated(sum_i-j, sum_j-i, foveaLevel) ){
+	if ( !params.foveaModel.positionCalculated(deltax+j, deltay+i, foveaLevel) ){
 	  float val0 = det_ptr[j];
 	  if(val0 > hessianThreshold) {
 	    /* The 3x3x3 neighbouring samples around the maxima.
