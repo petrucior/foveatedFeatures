@@ -7,6 +7,19 @@
 
 using namespace cv;
 
+struct strutureUnion{
+  MultiFoveation* m;
+  int* positionParam;
+  void setStrutureUnion(MultiFoveation *_m, int *_positionParam){
+    m = _m;
+    positionParam = _positionParam;
+  }
+  MultiFoveation* getStrutureMultiFoveation(){ return m; }
+  int* getStrutureParam(){ return positionParam; }
+  void setStrutureMultiFoveation(MultiFoveation *_m){ m = _m; }
+  void setStrutureParam(int *_positionParam){ positionParam = _positionParam; }
+};
+
 static void helpExtract(){
   printf("\nThis program demonstrates using multi foveated features2d detector and descriptor extractor\n"
 	 "Using the SURF desriptor:\n"
@@ -15,11 +28,14 @@ static void helpExtract(){
 }
 
 static void on_mouse(int event, int x, int y, int flags, void *_param){
-  FoveatedHessianDetectorParams* params = (FoveatedHessianDetectorParams *) _param;
-  params->foveaModel.setFovea(x, y);
-  params->foveaModel.fixFovea();
+  strutureUnion* params = (strutureUnion *) _param;
+  
+  int* p = (int *) params->getStrutureParam();
+  // Update fovea position
+  params->getStrutureMultiFoveation()->params[*p].foveaModel.setFovea(x, y);
+  // Update intersections
+  params->getStrutureMultiFoveation()->updateParams(*p);
 }
-
 
 int main(int argc, char** argv){
   
@@ -43,8 +59,12 @@ int main(int argc, char** argv){
   namedWindow("keypoints", 1);
 
   // Foveae params
-  std::vector<FoveatedHessianDetectorParams> params = foveas.getVectorParams();
+  int indice = 0;
   
+  // Struture with multifoveation and parameter address
+  strutureUnion su;
+  su.setStrutureUnion(&foveas, &indice);
+
   std::vector<Scalar> colors;
   srand (time(NULL)); // Initialize random seed
   for (int i = 0; i < argc-2; i++){
@@ -63,13 +83,7 @@ int main(int argc, char** argv){
   vector<KeyPoint> keypointSave;
   while(true){
     keypointSave.clear();
-    // Detecting keypoints
-    for (int i = 0; i < argc-2; i++){
-      vector<KeyPoint> keypoints;
-      foveatedHessianDetector(image, Mat(), keypoints, params[0]);
-      for (unsigned int k = 0; k < keypoints.size(); k++)
-	keypointSave.push_back(keypoints[k]);
-    }
+    foveas.extractKeypoints(image, keypointSave);
     
     // Computing descriptors
     SurfDescriptorExtractor extractor;
@@ -79,20 +93,18 @@ int main(int argc, char** argv){
     // Drawing the results
     Mat outputImg;
     drawKeypoints(image, keypointSave, outputImg, Scalar::all(-1), DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
-    for (int i = 0; i < argc-2; i++)
-      drawMultiFoveatedLevels(outputImg, params[i], i, colors[i]);
+    foveas.drawLevels(outputImg, colors);
     
     imshow("keypoints", outputImg);
     
     char key = waitKey(33);
     if ( key == 'q' ) break;
-    if ( key == 'm' ) // Control foveae
+    if ( key == 'm' ){ // Control foveae
       ( controlFoveaMove + 1 < argc-2 ) ? controlFoveaMove++ : controlFoveaMove = 0;
+      su.setStrutureParam(&controlFoveaMove);
+    }
     
-    // Function move foveae
-    cvSetMouseCallback("keypoints", &on_mouse, &params[controlFoveaMove]);
-
-    //foveas.updateParams(0, Size(image.cols, image.rows));
+    cvSetMouseCallback("keypoints", &on_mouse, &su);
 
   }
   

@@ -62,6 +62,13 @@ struct MultiFoveation{
   //
 
   /**
+   * \fn MultiFoveation( )
+   *
+   * \brief Constructor multi foveae.
+   */
+  MultiFoveation();
+
+  /**
    * \fn MultiFoveation(int foveae, Mat image, std::vector<String> ymlFile)
    *
    * \brief Constructor multi foveae.
@@ -73,14 +80,13 @@ struct MultiFoveation{
   MultiFoveation(int foveas, Mat image, std::vector<String> ymlFile);
   
   /**
-   * \fn void updateParams(int fovea, Size R)
+   * \fn void updateParams(int fovea)
    *
    * \brief Update the params of fovea.
    *
    * \param fovea - The number of fovea
-   *        R - Size of image
    */
-  void updateParams(int fovea, Size R);
+  void updateParams(int fovea);
   
   /**
    * \fn FoveatedHessianDetectorParams getParams(int fovea)
@@ -101,7 +107,7 @@ struct MultiFoveation{
    * \return The vector structure of params foveated.
    */
   std::vector<FoveatedHessianDetectorParams> getVectorParams();
-  
+
   /**
    * \fn Point intersection(float k, int m, Size R, int fovea1, int fovea2);
    *
@@ -155,9 +161,43 @@ struct MultiFoveation{
    */
   std::vector<Point> updateLimit(std::vector<Point> limits);
 
+  // Publics Functions
+  /**
+   * \fn void extractKeypoints(Mat image, std::vector<KeyPoint>& _keypoint)
+   *
+   * \brief Function to extract keypoints
+   *
+   * \param image - Image processed
+   *        _keypoint - address for keypoint pointer
+   *
+   * \return The keypoints extract of image
+   */  
+  void extractKeypoints(Mat image, std::vector<KeyPoint>& _keypoint);
+  
+  /**
+   * \fn void drawLevels(Mat& image, std::vector<Scalar> colors)
+   *
+   * \brief Function to paint gride of levels 
+   *
+   * \param image - Address for image pointer
+   *        colors - Vector of colors of grid
+   *
+   * \return An image with grid of levels
+   */  
+  void drawLevels(Mat& image, std::vector<Scalar> colors);
+  
 };
 
 #endif
+
+/**
+ * \fn MultiFoveation( )
+ *
+ * \brief Constructor multi foveae.
+ */
+MultiFoveation::MultiFoveation(){
+  params.clear();
+}
 
 /**
  * \fn MultiFoveation(int foveae, Mat image, std::vector<String> ymlFile)
@@ -203,7 +243,7 @@ MultiFoveation::MultiFoveation(int foveas, Mat image, std::vector<String> ymlFil
 	  //std::cout << "(" << limit[v].x << ", " << limit[v].y << ")" << std::endl;
 	  //std::cout << "(" << limit[v+1].x << ", " << limit[v+1].y << ")" << std::endl;
 	}
-	params[i].foveaModel.setMultiFoveation(k, delta, size);
+	params[i].foveaModel.setMultiFoveation(k, delta, size, i);
 	delta.clear();
 	size.clear();
       }
@@ -219,30 +259,36 @@ MultiFoveation::MultiFoveation(int foveas, Mat image, std::vector<String> ymlFil
 
 
 /**
- * \fn void updateParams(int fovea, Size R)
+ * \fn void updateParams(int fovea)
  *
  * \brief Update the params of fovea.
  *
  * \param fovea - The number of fovea
- *        R - Size of image
  */
 void 
-MultiFoveation::updateParams(int fovea, Size R){
+MultiFoveation::updateParams(int fovea){
+  /*std::cout << "Foveas para o movimento da fovea " << fovea << std::endl;
+  for (unsigned int i = 0; i < params.size(); i++){
+    std::cout << "Fovea " << i << std::endl;
+    std::cout << "(" << params[i].foveaModel.fx << ", " << params[i].foveaModel.fy << ")" << std::endl;
+  }
+  std::cout << "-------------------------" << std::endl;*/
+  
   std::vector<int> delta;
   std::vector<int> size;
   std::vector<Point> limits;
   std::vector<Point> limit;
-  // Loop to processing params
-  for (unsigned int p = fovea; p < params.size(); p++){
-    int m = params[p].foveaModel.m;
+  
+  for (unsigned int i = fovea; i < params.size(); i++){
+    int m = params[i].foveaModel.m;
     // Loop to processing levels
     for (int k = 0; k < m+1; k++){
       limits.clear();
       limit.clear();
       // Loop to processing foveae processed
-      for (unsigned int j = 0; j < p; j++){
-	Point pontos = intersection(k, m, R, j, p);
-	limits = limitProcessing(k, pontos, j, p);
+      for (unsigned int j = 0; j < i; j++){
+	Point pontos = intersection(k, m, Size(params[i].foveaModel.ux, params[i].foveaModel.uy), j, i);
+	limits = limitProcessing(k, pontos, j, i);
       }
       if (k == 0){
 	for (unsigned int pts = 0; pts < limits.size(); pts+=2){
@@ -258,7 +304,10 @@ MultiFoveation::updateParams(int fovea, Size R){
 	//std::cout << "(" << limit[v].x << ", " << limit[v].y << ")" << std::endl;
 	//std::cout << "(" << limit[v+1].x << ", " << limit[v+1].y << ")" << std::endl;
       }
-      params[p].foveaModel.setMultiFoveation(k, delta, size);
+      if ( i != 0 ){
+	params[i].init();
+	params[i].foveaModel.setMultiFoveation(k, delta, size, i);
+      }
       delta.clear();
       size.clear();
     }
@@ -287,7 +336,7 @@ MultiFoveation::getParams(int fovea){
  *
  * \return The vector structure of params foveated.
  */
-std::vector<FoveatedHessianDetectorParams> 
+std::vector<FoveatedHessianDetectorParams>
 MultiFoveation::getVectorParams(){
   return params;
 }
@@ -652,4 +701,41 @@ MultiFoveation::updateLimit(std::vector<Point> limits){
   }
   
   return region;
+}
+
+
+/**
+ * \fn void extractKeypoints(Mat image, std::vector<KeyPoint>& _keypoint);
+ *
+ * \brief Function to extract keypoints
+ *
+ * \param image - Image processed
+ *        _keypoint - address for keypoint pointer
+ *
+ * \return The keypoints extract of image
+ */
+void 
+MultiFoveation::extractKeypoints(Mat image, std::vector<KeyPoint>& _keypoint){
+  for (unsigned int i = 0; i < params.size(); i++){
+    vector<KeyPoint> keypoints;
+    foveatedHessianDetector(image, Mat(), keypoints, params[i]);
+    for (unsigned int k = 0; k < keypoints.size(); k++)
+      _keypoint.push_back(keypoints[k]);
+  }
+}
+
+/**
+ * \fn void drawLevels(Mat& image, std::vector<Scalar> colors)
+ *
+ * \brief Function to paint gride of levels 
+ *
+ * \param image - Address for image pointer
+ *        colors - Vector of colors of grid
+ *
+ * \return An image with grid of levels
+ */  
+void 
+MultiFoveation::drawLevels(Mat& image, std::vector<Scalar> colors){
+  for (unsigned int i = 0; i < params.size(); i++)
+    drawMultiFoveatedLevels(image, params[i], i, colors[i]);
 }

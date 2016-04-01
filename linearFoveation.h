@@ -30,6 +30,7 @@ struct LinearFoveation {
     wx = wy = ux = uy = 0;
     m = 0;
     flag = false;
+    id = 0;
     deltax.clear();
     deltay.clear();
     sizex.clear();
@@ -57,6 +58,10 @@ struct LinearFoveation {
     return flag;
   }
 
+  inline int getId(){
+    return id;
+  }
+
   inline int getQuantityOfIntersections(int k){
     return (int)deltax[k].size();
   }
@@ -80,6 +85,14 @@ struct LinearFoveation {
   bool positionCalculated(int linha, int coluna, int k){
     //std::cout << "Deltax: " << getDeltax(k, 0) << " Deltay: " << getDeltay(k, 0) << " --- linha: " << linha << ", coluna: " << coluna << std::endl;
     for (int i = 0; i < getQuantityOfIntersections(k); i++){
+      // When the region haven't intersections
+      if ( ( k != 0 ) &&
+	   ( getDeltax(k, i) == 0 ) &&
+	   ( getDeltay(k, i) == 0 ) &&
+	   ( getSizex(k, i) == 0 ) &&
+	   ( getSizey(k, i) == 0 ) ) return false;
+      
+      // Position delimited
       if ( ( getDeltax(k, i) < linha ) &&
 	   ( getDeltay(k, i) < coluna ) &&
 	   ( getDeltax(k, i) + getSizex(k, i) > linha ) &&
@@ -88,7 +101,7 @@ struct LinearFoveation {
     return true;
   }
   
-  void setMultiFoveation(int indice, std::vector<int> _delta, std::vector<int> _size){
+  void setMultiFoveation(int indice, std::vector<int> _delta, std::vector<int> _size, int _id){
     deltax[indice] = std::vector<int>((int)(_delta.size()/2));
     deltay[indice] = std::vector<int>((int)(_delta.size()/2));
     sizex[indice] = std::vector<int>((int)(_size.size()/2));
@@ -102,10 +115,11 @@ struct LinearFoveation {
       count++;
     }
     flag = true;
-    std::cout << "Delta" << std::endl;
+    id = _id;
+    /*std::cout << "Delta" << std::endl;
     std::cout << "(" << deltax[indice][0] << ", " << deltay[indice][0] << ")" << std::endl;
     std::cout << "Size" << std::endl;
-    std::cout << "(" << sizex[indice][0] << ", " << sizey[indice][0] << ")" << std::endl;
+    std::cout << "(" << sizex[indice][0] << ", " << sizey[indice][0] << ")" << std::endl;*/
   }
   
   //fix the fovea position: if fovea is outsite image domain, snap it to the closest valid position independently for each coordinate
@@ -135,7 +149,6 @@ struct LinearFoveation {
       assert(level[i] >= 0 && level[i] <= m);
     }
     assert(growthfactor >= 0);
-    
   }
 
   void init(){
@@ -155,10 +168,7 @@ struct LinearFoveation {
   std::vector<int> eta;
   std::vector<int> level;
   bool flag;
-  /*std::vector<int> deltax;
-  std::vector<int> deltay;
-  std::vector<int> sizex;
-  std::vector<int> sizey;*/
+  int id;
   std::vector<std::vector<int> > deltax, deltay, sizex, sizey;
 };
 
