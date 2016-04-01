@@ -442,8 +442,12 @@ MultiFoveation::intersection(float k, int m, Size R, int fovea1, int fovea2){
   // Verify if the intersection is between layers
   if ( ( !(p.x < f1.foveaModel.fx+(R.width/2) + (f1.foveaModel.getSizex(k)/2)) &&
 	 !(p.x > f2.foveaModel.fx+(R.width/2) - (f2.foveaModel.getSizex(k)/2)) ) ||
+       ( !(p.x > f1.foveaModel.fx+(R.width/2) - (f1.foveaModel.getSizex(k)/2)) &&
+	 !(p.x < f2.foveaModel.fx+(R.width/2) + (f2.foveaModel.getSizex(k)/2)) ) ||
        ( !(p.y < f1.foveaModel.fy+(R.height/2) + (f1.foveaModel.getSizey(k)/2)) &&
-	 !(p.y > f2.foveaModel.fy+(R.height/2) - (f2.foveaModel.getSizey(k)/2)) ) ){
+	 !(p.y > f2.foveaModel.fy+(R.height/2) - (f2.foveaModel.getSizey(k)/2)) ) ||
+       ( !(p.y > f1.foveaModel.fy+(R.height/2) - (f1.foveaModel.getSizey(k)/2)) &&
+	 !(p.y < f2.foveaModel.fy+(R.height/2) + (f2.foveaModel.getSizey(k)/2)) ) ){
     // Not exist intersection between layers
     p.x = -1;
     p.y = -1;
