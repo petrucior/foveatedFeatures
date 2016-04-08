@@ -160,7 +160,7 @@ struct MultiFoveation{
    * \return Vector of limits for region to be processed
    */
   std::vector<Point> updateLimit(std::vector<Point> limits);
-
+  
   // Publics Functions
   /**
    * \fn void extractKeypoints(Mat image, std::vector<KeyPoint>& _keypoint)
@@ -209,8 +209,36 @@ MultiFoveation::MultiFoveation(){
  *        ymlFile - Vector with yaml names.
  */
 MultiFoveation::MultiFoveation(int foveas, Mat image, std::vector<String> ymlFile){
+  /*std::vector<Point> limits, limit;
+  Point p1 = Point(20, 20);
+  Point s1 = Point(15, 10);
+  Point p2 = Point(10, 20);
+  Point s2 = Point(10, 10);
+  Point p3 = Point(15, 10);
+  Point s3 = Point(5, 15);
+  Point p4 = Point(20, 10);
+  Point s4 = Point(10, 10);
+  Point p5 = Point(15, 10);
+  Point s5 = Point(10, 10);
+  Point p6 = Point(25, 10);
+  Point s6 = Point(5, 15);
+  limits.push_back(p1); limits.push_back(s1);
+  limits.push_back(p2); limits.push_back(s2);
+  limits.push_back(p3); limits.push_back(s3);
+  limits.push_back(p4); limits.push_back(s4);
+  limits.push_back(p5); limits.push_back(s5);
+  limits.push_back(p6); limits.push_back(s6);
+  limit = updateLimit(limits);
+  for (unsigned int v = 0; v < limit.size(); v+=2){
+    std::cout << "Delta" << std::endl;
+    std::cout << "(" << limit[v].x << ", " << limit[v].y << ")" << std::endl;
+    std::cout << "Size" << std::endl;
+    std::cout << "(" << limit[v+1].x << ", " << limit[v+1].y << ")" << std::endl;
+  }*/
+  
   std::vector<int> delta;
   std::vector<int> size;
+  std::vector<Point> limitsAux;
   std::vector<Point> limits;
   std::vector<Point> limit;
   params.clear();
@@ -226,8 +254,12 @@ MultiFoveation::MultiFoveation(int foveas, Mat image, std::vector<String> ymlFil
 	limit.clear();
 	// Loop to processing foveae processed
 	for (int j = 0; j < i; j++){
-	  Point pontos = intersection(k, m, image.size(), j, i);
-	  limits = limitProcessing(k, pontos, j, i);
+	  limitsAux.clear();
+	  //Point pontos = intersection(k, m, image.size(), j, i);
+	  Point pontos = intersection(k, m, Size(params[i].foveaModel.ux, params[i].foveaModel.uy), j, i);
+	  limitsAux = limitProcessing(k, pontos, j, i);
+	  for (unsigned int l = 0; l < limitsAux.size(); l++)
+	    limits.push_back(limitsAux[l]);
 	}
 	if (k == 0){
 	  for (unsigned int pts = 0; pts < limits.size(); pts+=2){
@@ -235,12 +267,15 @@ MultiFoveation::MultiFoveation(int foveas, Mat image, std::vector<String> ymlFil
 	    limits[pts+1] = Point(0, 0);
 	  }
 	}
-	limit = updateLimit(limits);
+	if ( (i == 2) && (k == 3) )
+	  limit = updateLimit(limits);
         // Update delta and size
         for (unsigned int v = 0; v < limit.size(); v+=2){
 	  delta.push_back(limit[v].x); delta.push_back(limit[v].y);
 	  size.push_back(limit[v+1].x); size.push_back(limit[v+1].y);
+	  //std::cout << "Delta" << std::endl;
 	  //std::cout << "(" << limit[v].x << ", " << limit[v].y << ")" << std::endl;
+	  //std::cout << "Size" << std::endl;
 	  //std::cout << "(" << limit[v+1].x << ", " << limit[v+1].y << ")" << std::endl;
 	}
 	params[i].foveaModel.setMultiFoveation(k, delta, size, i);
@@ -276,6 +311,7 @@ MultiFoveation::updateParams(int fovea){
   
   std::vector<int> delta;
   std::vector<int> size;
+  std::vector<Point> limitsAux;
   std::vector<Point> limits;
   std::vector<Point> limit;
   
@@ -287,16 +323,21 @@ MultiFoveation::updateParams(int fovea){
       limit.clear();
       // Loop to processing foveae processed
       for (unsigned int j = 0; j < i; j++){
-	Point pontos = intersection(k, m, Size(params[i].foveaModel.ux, params[i].foveaModel.uy), j, i);
-	limits = limitProcessing(k, pontos, j, i);
+	limitsAux.clear();
+      	Point pontos = intersection(k, m, Size(params[i].foveaModel.ux, params[i].foveaModel.uy), j, i);
+	limitsAux = limitProcessing(k, pontos, j, i);
+	for (unsigned int l = 0; l < limitsAux.size(); l++)
+	    limits.push_back(limitsAux[l]);
       }
       if (k == 0){
 	for (unsigned int pts = 0; pts < limits.size(); pts+=2){
 	  limits[pts] = Point(0, 0);
+	  //limits[pts+1] = Point(params[i].foveaModel.ux, params[i].foveaModel.uy);
 	  limits[pts+1] = Point(0, 0);
 	}
       }
-      limit = updateLimit(limits);
+      if ( (i == 2) && (k == 3) )
+	limit = updateLimit(limits);
       // Update delta and size
       for (unsigned int v = 0; v < limit.size(); v+=2){
 	delta.push_back(limit[v].x); delta.push_back(limit[v].y);
@@ -326,7 +367,6 @@ MultiFoveation::updateParams(int fovea){
 FoveatedHessianDetectorParams 
 MultiFoveation::getParams(int fovea){
   return params[fovea];
-  //return params[fovea];
 }
 
 /**
@@ -476,8 +516,13 @@ MultiFoveation::limitProcessing(float k, Point pointIntersection, int fovea1, in
   FoveatedHessianDetectorParams f1, f2;
   f1 = params[fovea1];
   f2 = params[fovea2];
-  // Modificar v para o centro da região
-  Point v = Point(f2.foveaModel.fx - f1.foveaModel.fx, f2.foveaModel.fy - f1.foveaModel.fy);
+  // Center of levels
+  Point centerF1 = Point( (int)(f1.foveaModel.getDeltax(k) + (f1.foveaModel.getDeltax(k)+f1.foveaModel.getSizex(k)))/2, 
+			  (int)(f1.foveaModel.getDeltay(k) + (f1.foveaModel.getDeltay(k)+f1.foveaModel.getSizey(k)))/2 );
+  Point centerF2 = Point( (int)(f2.foveaModel.getDeltax(k) + (f2.foveaModel.getDeltax(k)+f2.foveaModel.getSizex(k)))/2, 
+			  (int)(f2.foveaModel.getDeltay(k) + (f2.foveaModel.getDeltay(k)+f2.foveaModel.getSizey(k)))/2 );
+  // Point central in each level
+  Point v = Point( centerF2.x - centerF1.x, centerF2.y - centerF1.y);
   std::vector<Point> limits;
   Point delta = Point(0, 0);
   Point size = Point(0, 0);
@@ -528,7 +573,8 @@ MultiFoveation::limitProcessing(float k, Point pointIntersection, int fovea1, in
     limits.push_back(delta);
     limits.push_back(size);
     // Figura 2
-    delta = Point(pointIntersection.x, pointIntersection.y);
+    //delta = Point(pointIntersection.x, pointIntersection.y);
+    delta = Point(pointIntersection.x, pointIntersection.y+1);
     size = Point(f2.foveaModel.getSizex(k) - (pointIntersection.x - f2.foveaModel.getDeltax(k)), 
 		 f2.foveaModel.getSizey(k) - (pointIntersection.y - f2.foveaModel.getDeltay(k)));
     limits.push_back(delta);
@@ -543,7 +589,8 @@ MultiFoveation::limitProcessing(float k, Point pointIntersection, int fovea1, in
     limits.push_back(delta);
     limits.push_back(size);
     // Figura 2
-    delta = Point(f2.foveaModel.getDeltax(k), pointIntersection.y);
+    //delta = Point(f2.foveaModel.getDeltax(k), pointIntersection.y);
+    delta = Point(f2.foveaModel.getDeltax(k), pointIntersection.y+1);
     size = Point(f2.foveaModel.getSizex(k), f2.foveaModel.getSizey(k) - (pointIntersection.y - f2.foveaModel.getDeltay(k)));
     limits.push_back(delta);
     limits.push_back(size);
@@ -556,7 +603,8 @@ MultiFoveation::limitProcessing(float k, Point pointIntersection, int fovea1, in
     limits.push_back(delta);
     limits.push_back(size);
     // Figura 2
-    delta = Point(f2.foveaModel.getDeltax(k), pointIntersection.y);
+    //delta = Point(f2.foveaModel.getDeltax(k), pointIntersection.y);
+    delta = Point(f2.foveaModel.getDeltax(k), pointIntersection.y+1);
     size = Point((pointIntersection.x - f2.foveaModel.getDeltax(k)), 
 		 f2.foveaModel.getSizey(k) - (pointIntersection.y - f2.foveaModel.getDeltay(k)));
     limits.push_back(delta);
@@ -570,12 +618,14 @@ MultiFoveation::limitProcessing(float k, Point pointIntersection, int fovea1, in
     limits.push_back(delta);
     limits.push_back(size);
     // Figura 2
-    delta = Point(f2.foveaModel.getDeltax(k), pointIntersection.y);
+    //delta = Point(f2.foveaModel.getDeltax(k), pointIntersection.y);
+    delta = Point(f2.foveaModel.getDeltax(k), pointIntersection.y+1);
     size = Point(f2.foveaModel.getSizex(k), f2.foveaModel.getSizey(k) - (pointIntersection.y - f2.foveaModel.getDeltay(k)));
     limits.push_back(delta);
     limits.push_back(size);
   }
-
+  delta = Point(-1, -1);
+  size = Point(-1, -1);
   // Without shifting
   if ( (v.x == 0) && (v.y == 0) ){
     limits.push_back(delta);
@@ -607,8 +657,8 @@ MultiFoveation::verifyRegion(int position, std::vector<Point> region, Point v){
   Point v_startPoint = Point(v.x - startPoint.x, v.y - startPoint.y);
   // Vector v - finishPoint
   Point v_finishPoint = Point(v.x - finishPoint.x, v.y - finishPoint.y);
-  if ( ( v_startPoint.x > 0 ) && ( v_startPoint.y > 0 ) &&
-       ( v_finishPoint.x < 0 ) && ( v_finishPoint.y < 0 ) ) return true;
+  if ( ( v_startPoint.x >= 0 ) && ( v_startPoint.y >= 0 ) &&
+       ( v_finishPoint.x <= 0 ) && ( v_finishPoint.y <= 0 ) ) return true;
   else return false;
 }
 
@@ -623,7 +673,156 @@ MultiFoveation::verifyRegion(int position, std::vector<Point> region, Point v){
  */
 std::vector<Point>
 MultiFoveation::updateLimit(std::vector<Point> limits){
+  std::vector<int> totalOverlap, withoutOverlap, partialOverlap;
+  for (unsigned int i = 0; i < limits.size(); i+=2){
+    /*std::cout << "Delta" << std::endl;
+    std::cout << limits[i].x << ", " << limits[i].y << std::endl;
+    std::cout << "Size" << std::endl;
+    std::cout << limits[i+1].x << ", " << limits[i+1].y << std::endl;
+    std::cout << "-----------" << std::endl;*/
+    if ( ( limits[i].x == -1 ) &&
+	 ( limits[i].y == -1 ) &&
+	 ( limits[i+1].x == -1 ) &&
+	 ( limits[i+1].y == -1 ) ){
+      totalOverlap.push_back(i);
+    }
+
+    if ( ( limits[i].x == 0 ) &&
+	 ( limits[i].y == 0 ) &&
+	 ( limits[i+1].x == 0 ) &&
+	 ( limits[i+1].y == 0 ) ){
+      withoutOverlap.push_back(i);
+    }
+
+    if ( ( limits[i].x != 0 ) &&
+	 ( limits[i].y != 0 ) &&
+	 ( limits[i+1].x != 0 ) &&
+	 ( limits[i+1].y != 0 ) &&
+	 ( limits[i].x != -1 ) &&
+	 ( limits[i].y != -1 ) &&
+	 ( limits[i+1].x != -1 ) &&
+	 ( limits[i+1].y != -1 )){
+      partialOverlap.push_back(i);
+    }
+  }
   std::vector<Point> region;
+  std::vector<Point> regionSearch;
+  bool atualized = false;
+  if ( totalOverlap.size() > 0 ){
+    //std::cout << "Overlap total" << std::endl;
+    region.push_back(Point(-1, -1));
+    region.push_back(Point(-1, -1));
+    return region;
+  }
+  else{
+    if ( partialOverlap.size() > 0 ){
+      // Remove the without overlap
+      for(unsigned int i = 0; i < limits.size(); i+=2){
+	if ( ( limits[i].x == 0 ) &&
+	     ( limits[i].y == 0 ) &&
+	     ( limits[i+1].x == 0 ) &&
+	     ( limits[i+1].y == 0 ) ){
+	  limits.erase(limits.begin()+i);
+	  limits.erase(limits.begin()+(i+1));
+	}
+      }
+      //std::cout << "Overlap partial" << std::endl;
+      for(unsigned int i = 0; i < limits.size(); i+=2){
+	// Region Analised
+	regionSearch.push_back(limits[i]);
+	regionSearch.push_back(limits[i+1]);
+	for (unsigned int j = i+2; j < limits.size(); j+=2){
+	  // Build vertices ( clockwise direction )
+	  Point v1 = limits[j];
+	  Point v2 = Point((limits[j]).x+(limits[j+1]).x, (limits[j]).y);
+	  Point v3 = Point((limits[j]).x+(limits[j+1]).x, (limits[j]).y+(limits[j+1]).y);
+	  Point v4 = Point((limits[j]).x, (limits[j]).y+(limits[j+1]).y);
+	  // Regions update
+	  if ( verifyRegion(i, regionSearch, v1) ){
+	    regionSearch[i+1].x -= (v1.x - regionSearch[i].x);
+	    regionSearch[i+1].y -= (v1.y - regionSearch[i].y);
+	    regionSearch[i] = v1;
+	    atualized = true;
+	  }
+	  if ( verifyRegion(i, regionSearch, v2) ){
+	    regionSearch[i+1].x = (v2.x - regionSearch[i].x);
+	    regionSearch[i+1].y -= (v2.y - regionSearch[i].y);
+	    regionSearch[i].y = v2.y;
+	    atualized = true;
+	  }
+	  if ( verifyRegion(i, regionSearch, v3) ){
+	    regionSearch[i+1].x = (v3.x - regionSearch[i].x);
+	    regionSearch[i+1].y = (v3.y - regionSearch[i].y);
+	    atualized = true;
+	  }
+	  if ( verifyRegion(i, regionSearch, v4) ){
+	    regionSearch[i+1].x -= (v4.x - regionSearch[i].x);
+	    regionSearch[i+1].y = (v4.y - regionSearch[i].y);
+	    regionSearch[i].x = v4.x;
+	    atualized = true;
+	  }
+	}
+	if (( atualized ) || ( limits.size() <= 4 )) {
+	  region.push_back(regionSearch[i]);
+	  region.push_back(regionSearch[i+1]);
+	  atualized = false;
+	}
+      }
+      return region;
+    }
+    else{
+      //std::cout << "Without overlap" << std::endl;
+    }
+  }
+  return limits;
+  
+  /*std::vector<Point> region;
+  std::vector<Point> regionSearch;
+  bool atualized = false;
+  for(unsigned int i = 0; i < limits.size(); i+=2){
+    // Region Analised
+    regionSearch.push_back(limits[i]);
+    regionSearch.push_back(limits[i+1]);
+    for (unsigned int j = i+2; j < limits.size(); j+=2){
+      // Build vertices ( clockwise direction )
+      Point v1 = limits[j];
+      Point v2 = Point((limits[j]).x+(limits[j+1]).x, (limits[j]).y);
+      Point v3 = Point((limits[j]).x+(limits[j+1]).x, (limits[j]).y+(limits[j+1]).y);
+      Point v4 = Point((limits[j]).x, (limits[j]).y+(limits[j+1]).y);
+      // Regions update
+      if ( verifyRegion(i, regionSearch, v1) ){
+	regionSearch[i+1].x -= (v1.x - regionSearch[i].x);
+	regionSearch[i+1].y -= (v1.y - regionSearch[i].y);
+	regionSearch[i] = v1;
+	atualized = true;
+      }
+      if ( verifyRegion(i, regionSearch, v2) ){
+	regionSearch[i+1].x = (v2.x - regionSearch[i].x);
+	regionSearch[i+1].y -= (v2.y - regionSearch[i].y);
+	regionSearch[i].y = v2.y;
+	atualized = true;
+      }
+      if ( verifyRegion(i, regionSearch, v3) ){
+	regionSearch[i+1].x = (v3.x - regionSearch[i].x);
+	regionSearch[i+1].y = (v3.y - regionSearch[i].y);
+	atualized = true;
+      }
+      if ( verifyRegion(i, regionSearch, v4) ){
+	regionSearch[i+1].x -= (v4.x - regionSearch[i].x);
+	regionSearch[i+1].y = (v4.y - regionSearch[i].y);
+	regionSearch[i].x = v4.x;
+	atualized = true;
+      }
+    }
+    if (( atualized ) || ( limits.size() <= 4 )) {
+      region.push_back(regionSearch[i]);
+      region.push_back(regionSearch[i+1]);
+      atualized = false;
+    }
+  }
+  return region;*/
+  
+  /*std::vector<Point> region;
   std::vector<Point> regionSearch;
   bool atualized = false;
   std::vector<int> intercepted(limits.size(), -1);
@@ -634,7 +833,7 @@ MultiFoveation::updateLimit(std::vector<Point> limits){
     regionSearch.push_back(limits[i+1]);
     for (unsigned int j = i+2; j < limits.size(); j+=2){ 
       if ( intercepted[j] == -1 ){ // Not intercepted
-	// Build vertices ( clockwise direction )
+        // Build vertices ( clockwise direction )
 	Point v1 = limits[j];
 	Point v2 = Point((limits[j]).x+(limits[j+1]).x, (limits[j]).y);
 	Point v3 = Point((limits[j]).x+(limits[j+1]).x, (limits[j]).y+(limits[j+1]).y);
@@ -685,7 +884,7 @@ MultiFoveation::updateLimit(std::vector<Point> limits){
 	}
       }
     }
-
+    
     if ( atualized ){
       region.push_back(regionSearch[i]);
       region.push_back(regionSearch[i+1]);
@@ -704,7 +903,7 @@ MultiFoveation::updateLimit(std::vector<Point> limits){
     }
   }
   
-  return region;
+  return region;*/
 }
 
 
@@ -722,7 +921,7 @@ void
 MultiFoveation::extractKeypoints(Mat image, std::vector<KeyPoint>& _keypoint){
   for (unsigned int i = 0; i < params.size(); i++){
     vector<KeyPoint> keypoints;
-    foveatedHessianDetector(image, Mat(), keypoints, params[i]);
+    foveatedHessianDetector(image, Mat(), keypoints, params[2]);
     for (unsigned int k = 0; k < keypoints.size(); k++)
       _keypoint.push_back(keypoints[k]);
   }

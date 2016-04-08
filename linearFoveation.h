@@ -90,13 +90,14 @@ struct LinearFoveation {
 	   ( getDeltax(k, i) == 0 ) &&
 	   ( getDeltay(k, i) == 0 ) &&
 	   ( getSizex(k, i) == 0 ) &&
-	   ( getSizey(k, i) == 0 ) ) return false;
+	   ( getSizey(k, i) == 0 )  ) return false;
       
       // Position delimited
       if ( ( getDeltax(k, i) < linha ) &&
 	   ( getDeltay(k, i) < coluna ) &&
 	   ( getDeltax(k, i) + getSizex(k, i) > linha ) &&
 	   ( getDeltay(k, i) + getSizey(k, i) > coluna ) ) return false;
+
     }
     return true;
   }
@@ -116,7 +117,8 @@ struct LinearFoveation {
     }
     flag = true;
     id = _id;
-    /*std::cout << "Delta" << std::endl;
+    /*std::cout << "Fóvea " << _id << ", indice: " << indice << std::endl;
+    std::cout << "Delta" << std::endl;
     std::cout << "(" << deltax[indice][0] << ", " << deltay[indice][0] << ")" << std::endl;
     std::cout << "Size" << std::endl;
     std::cout << "(" << sizex[indice][0] << ", " << sizey[indice][0] << ")" << std::endl;*/

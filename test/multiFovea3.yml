@@ -1,10 +1,12 @@
 %YAML:1.0
 smallestLevelWidth: 60
 smallestLevelHeight: 60
-numberOfLevels: 2
-bvector: [0, 1]
-etavector: [2, 1]
-levelvector: [0, 1]
-foveax: -30
-foveay: 20
+numberOfLevels: 4
+bvector: [0, 0, 0, 1]
+etavector: [4, 3, 2, 1]
+levelvector: [0, 1, 2, 3]
+%foveax: -40
+%foveay: -20
+foveax: 0
+foveay: 40
 hessianThreshold: 100
