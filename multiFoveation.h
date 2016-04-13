@@ -267,7 +267,7 @@ MultiFoveation::MultiFoveation(int foveas, Mat image, std::vector<String> ymlFil
 	    limits[pts+1] = Point(0, 0);
 	  }
 	}
-	if ( (i == 2) && (k == 3) )
+	//if ( (i == 2) && (k == 3) )
 	  limit = updateLimit(limits);
         // Update delta and size
         for (unsigned int v = 0; v < limit.size(); v+=2){
@@ -336,7 +336,7 @@ MultiFoveation::updateParams(int fovea){
 	  limits[pts+1] = Point(0, 0);
 	}
       }
-      if ( (i == 2) && (k == 3) )
+      //if ( (i == 2) && (k == 3) )
 	limit = updateLimit(limits);
       // Update delta and size
       for (unsigned int v = 0; v < limit.size(); v+=2){
@@ -726,6 +726,7 @@ MultiFoveation::updateLimit(std::vector<Point> limits){
 	  limits.erase(limits.begin()+(i+1));
 	}
       }
+      
       //std::cout << "Overlap partial" << std::endl;
       for(unsigned int i = 0; i < limits.size(); i+=2){
 	// Region Analised
