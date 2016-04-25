@@ -7,6 +7,6 @@ etavector: [4, 3, 2, 1]
 levelvector: [0, 1, 2, 3]
 %foveax: -40
 %foveay: -20
-foveax: 0
-foveay: 40
+foveax: 40
+foveay: -3
 hessianThreshold: 100

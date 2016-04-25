@@ -105,7 +105,7 @@ int main(int argc, char** argv){
     }
     
     cvSetMouseCallback("keypoints", &on_mouse, &su);
-
+    
   }
   
   return 0;
