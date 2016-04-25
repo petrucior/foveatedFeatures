@@ -5,8 +5,6 @@ numberOfLevels: 4
 bvector: [0, 0, 0, 1]
 etavector: [4, 3, 2, 1]
 levelvector: [0, 1, 2, 3]
-%foveax: 0
-%foveay: -30
 foveax: -40
-foveay: 5
+foveay: -20
 hessianThreshold: 100
