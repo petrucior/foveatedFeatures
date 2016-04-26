@@ -100,8 +100,16 @@ int main(int argc, char** argv){
     char key = waitKey(33);
     if ( key == 'q' ) break;
     if ( key == 'm' ){ // Control foveae
-      ( controlFoveaMove + 1 < argc-2 ) ? controlFoveaMove++ : controlFoveaMove = 0;
+      ( controlFoveaMove + 1 < (int)foveas.params.size() ) ? controlFoveaMove++ : controlFoveaMove = 0;
       su.setStrutureParam(&controlFoveaMove);
+    }
+    if ( key == 'a' ){ // Add foveae
+      String file;
+      std::cin >> file;
+      foveas.addFovea(image, file);
+    }
+    if ( key == 'r' ){ // Remove foveae
+      foveas.removeFovea(controlFoveaMove);
     }
     
     cvSetMouseCallback("keypoints", &on_mouse, &su);

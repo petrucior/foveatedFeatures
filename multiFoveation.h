@@ -89,6 +89,27 @@ struct MultiFoveation{
   void updateParams(int fovea);
   
   /**
+   * \fn void addFovea(Mat image, String ymlFile)
+   *
+   * \brief Add new struture of fovea.
+   *
+   * \param image - Image to be foveated 
+   *        ymlFile - Configuration file of fovea
+   */
+  void addFovea(Mat image, String ymlFile);
+
+  /**
+   * \fn bool removeFovea(int fovea)
+   *
+   * \brief Remove the struture of fovea with id fovea.
+   *
+   * \param fovea - The number of fovea
+   *
+   * \return True if remove fovea and false otherwise.
+   */
+  bool removeFovea(int fovea);
+  
+  /**
    * \fn Point intersection(float k, int m, Size R, int fovea1, int fovea2);
    *
    * \brief Function for calculate the intersection between foveae.
@@ -180,32 +201,6 @@ MultiFoveation::MultiFoveation(){
  *        ymlFile - Vector with yaml names.
  */
 MultiFoveation::MultiFoveation(int foveas, Mat image, std::vector<String> ymlFile){
-  /*std::vector<Point> t;
-  t.push_back(Point(0, 0));
-  t.push_back(Point(100, 100));
-  std::vector<Point> pointsIntersection;
-  pointsIntersection.push_back(Point(20, 80));
-  pointsIntersection.push_back(Point(35, 50));
-  pointsIntersection.push_back(Point(50, 35));
-  pointsIntersection.push_back(Point(60, 30));
-  pointsIntersection.push_back(Point(70, 90));
-  pointsIntersection.push_back(Point(80, 50));
-  std::vector<Point> pointsDirection;
-  pointsDirection.push_back(Point(-1, 1));
-  pointsDirection.push_back(Point(-1, -1));
-  pointsDirection.push_back(Point(-1, -1));
-  pointsDirection.push_back(Point(1, -1));
-  pointsDirection.push_back(Point(1, 1));
-  pointsDirection.push_back(Point(1, 1));
-  std::vector<Point> region;
-  retirar(region, t, pointsIntersection, pointsDirection);
-  for (unsigned int v = 0; v < region.size(); v+=2){
-    std::cout << "delta" << std::endl;
-    std::cout << "(" << region[v].x << ", " << region[v].y << ")" << std::endl;
-    std::cout << "size" << std::endl;
-    std::cout << "(" << region[v+1].x << ", " << region[v+1].y << ")" << std::endl;
-  }*/
-
   std::vector<int> delta;
   std::vector<int> size;
   std::vector<Point> pointsIntersection;
@@ -247,16 +242,11 @@ MultiFoveation::MultiFoveation(int foveas, Mat image, std::vector<String> ymlFil
 	std::vector<Point> s;
 	s.push_back(Point(params[i].foveaModel.getDeltax(k), params[i].foveaModel.getDeltay(k)));
 	s.push_back(Point(params[i].foveaModel.getDeltax(k) + params[i].foveaModel.getSizex(k), params[i].foveaModel.getDeltay(k) + params[i].foveaModel.getSizey(k)));
-	//if (( i == 2 ) && ( k == 3 ))
-	  retirar(region, s, pointsIntersection, pointsDirection);
+	retirar(region, s, pointsIntersection, pointsDirection);
 	
 	for (unsigned int v = 0; v < region.size(); v+=2){
 	  delta.push_back(region[v].x); delta.push_back(region[v].y);
 	  size.push_back(region[v+1].x); size.push_back(region[v+1].y);
-	  //std::cout << "delta" << std::endl;
-	  //std::cout << "(" << region[v].x << ", " << region[v].y << ")" << std::endl;
-	  //std::cout << "size" << std::endl;
-	  //std::cout << "(" << region[v+1].x << ", " << region[v+1].y << ")" << std::endl;
 	}
 	params[i].foveaModel.setMultiFoveation(k, delta, size, i);
 	delta.clear();
@@ -311,8 +301,7 @@ MultiFoveation::updateParams(int fovea){
       std::vector<Point> s;
       s.push_back(Point(params[i].foveaModel.getDeltax(k), params[i].foveaModel.getDeltay(k)));
       s.push_back(Point(params[i].foveaModel.getDeltax(k) + params[i].foveaModel.getSizex(k), params[i].foveaModel.getDeltay(k) + params[i].foveaModel.getSizey(k)));
-      //if (( i == 2 ) && ( k == 3 ))
-	retirar(region, s, pointsIntersection, pointsDirection);
+      retirar(region, s, pointsIntersection, pointsDirection);
 	
       for (unsigned int v = 0; v < region.size(); v+=2){
 	delta.push_back(region[v].x); delta.push_back(region[v].y);
@@ -322,6 +311,42 @@ MultiFoveation::updateParams(int fovea){
       delta.clear();
       size.clear();
     }
+  }
+}
+
+/**
+ * \fn void addFovea(Mat image, String ymlFile)
+ *
+ * \brief Add new struture of fovea.
+ *
+ * \param image - Image to be foveated 
+ *        ymlFile - Configuration file of fovea
+ */
+void
+MultiFoveation::addFovea(Mat image, String ymlFile){
+  FoveatedHessianDetectorParams p(image.cols, image.rows, ymlFile);
+  params.push_back(p);
+  params[(int)params.size() - 1].foveaModel.init();
+  updateParams((int)params.size() - 1);
+}
+
+/**
+ * \fn bool removeFovea(int fovea)
+ *
+ * \brief Remove the struture of fovea with id fovea.
+ *
+ * \param fovea - The number of fovea
+ *
+ * \return True if remove fovea and false otherwise.
+ */
+bool 
+MultiFoveation::removeFovea(int fovea){
+  if ( ( (int)params.size() == 0 ) ||
+       ( (int)params.size() - 1 < fovea ) ||
+       ( fovea < 0 ) ) return false;
+  else{
+    params.erase(params.begin()+fovea);
+    return true;
   }
 }
 
@@ -460,11 +485,8 @@ MultiFoveation::directionPoint(float k, Point pointIntersection, int fovea1, int
     ------------------------------
     (-1, 1)  -- (1, 1)
     (-1, -1) -- (1, -1)
-    ------------------------------
-    (-1, 1) -- ( 0, 1 ) -- (1, 1)
-    (-1, 0) -- ( 2, 2 ) -- (1, 0)
-    (-1,-1) -- ( 0, -1) -- (1, -1)
     without intersection = (0, 0)
+    Without shifting = (2, 2)
     ------------------------------
    */
   FoveatedHessianDetectorParams f1, f2;
@@ -485,42 +507,38 @@ MultiFoveation::directionPoint(float k, Point pointIntersection, int fovea1, int
   // Horizontal shifting
   if ( (v.x > 0) && (v.y == 0) ){ // Shift out of origin
     //std::cout << "sentido horizontal negativo" << std::endl;
-    //direcao = Point(1, 0);
     direcao = Point(-1, -1);
   }
   if ( (v.x < 0) && (v.y == 0) ){ // Shift in of origin
     //std::cout << "sentido horizontal positivo" << std::endl;
-    //direcao = Point(-1, 0);
     direcao = Point(1, -1);
   }
 
   // Vertical shifting
   if ( (v.x == 0) && (v.y > 0) ){ // Shift out of origin
     //std::cout << "sentido vertical cima" << std::endl;
-    //direcao = Point(0, -1);
     direcao = Point(1, 1);
   }
   if ( (v.x == 0) && (v.y < 0) ){ // Shift in of origin
     //std::cout << "sentido vertical baixo" << std::endl;
-    //direcao = Point(0, 1);
     direcao = Point(1, -1);
   }
   
   // Diagonal shifting
-  if ( (v.x > 0) && (v.y < 0) ){ // Deslocamento para o sentido nordeste
-    //std::cout << "sentido nordeste" << std::endl;
+  if ( (v.x > 0) && (v.y < 0) ){ // Deslocamento para o sentido sudoeste
+    //std::cout << "sentido sudoeste" << std::endl;
     direcao = Point(-1, -1);
   }
-  if ( (v.x > 0) && (v.y > 0) ){ // Deslocamento para o sentido sudeste
-    //std::cout << "sentido sudeste" << std::end;l
+  if ( (v.x > 0) && (v.y > 0) ){ // Deslocamento para o sentido noroeste
+    //std::cout << "sentido noroeste" << std::endl;
     direcao = Point(-1, 1);
   }
-  if ( (v.x < 0) && (v.y < 0) ){ // Deslocamento para o sentido norte
-    //std::cout << "sentido norte" << std::endl;
+  if ( (v.x < 0) && (v.y < 0) ){ // Deslocamento para o sentido sudeste
+    //std::cout << "sentido sudeste" << std::endl;
     direcao = Point(1, -1);
   }
-  if ( (v.x < 0) && (v.y > 0) ){ // Deslocamento para o sentido centro-oeste
-    //std::cout << "sentido centro-oeste" << std::endl;
+  if ( (v.x < 0) && (v.y > 0) ){ // Deslocamento para o sentido nordeste
+    //std::cout << "sentido nordeste" << std::endl;
     direcao = Point(1, 1);
   }
   // Without shifting
@@ -545,6 +563,15 @@ MultiFoveation::directionPoint(float k, Point pointIntersection, int fovea1, int
  */
 void 
 MultiFoveation::retirar(std::vector<Point>& region, std::vector<Point> sizeLevel, std::vector<Point> vectorPointIntersection, std::vector<Point> vectorDirectionIntersection){
+  // Loop for detect region without shifting
+  for (unsigned int p = 0; p < vectorDirectionIntersection.size(); p++){
+    if ( ( vectorDirectionIntersection[p].x == 2 ) && ( vectorDirectionIntersection[p].y == 2 ) ){
+      region.push_back(Point(-1, -1));
+      region.push_back(Point(-1, -1));
+      return;
+    }
+  }
+  
   std::vector<int> minLimit(vectorPointIntersection.size()+1, sizeLevel[0].y);
   std::vector<int> maxLimit(vectorPointIntersection.size()+1, sizeLevel[1].y); // sizeLevel[0].y + sizeLevel[1].y
   for ( unsigned int p1 = 0; p1 < vectorPointIntersection.size(); p1++ ){    
