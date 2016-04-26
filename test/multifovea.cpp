@@ -83,12 +83,18 @@ int main(int argc, char** argv){
   vector<KeyPoint> keypointSave;
   while(true){
     keypointSave.clear();
+    int64 t = cv::getTickCount();
     foveas.extractKeypoints(image, keypointSave);
+    t = cv::getTickCount() - t;
+    std::cout << "Feature extraction = " << t*1000/cv::getTickFrequency() << " milliseconds" << std::endl;
     
     // Computing descriptors
     SurfDescriptorExtractor extractor;
     Mat descriptors;
+    t = cv::getTickCount();
     extractor.compute(image, keypointSave, descriptors);
+    t = cv::getTickCount() - t;
+    std::cout << "Feature description = " << t*1000/cv::getTickFrequency() << " milliseconds" << std::endl;
     
     // Drawing the results
     Mat outputImg;
