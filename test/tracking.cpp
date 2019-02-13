@@ -2,9 +2,9 @@
 #include "../foveatedTracking.h"
 #include <stdio.h>
 #include "opencv2/core/core.hpp"
-#include "opencv2/features2d/features2d.hpp"
+//#include "opencv2/features2d/features2d.hpp"
 #include "opencv2/highgui/highgui.hpp"
-#include "opencv2/nonfree/nonfree.hpp"
+#include "opencv2/xfeatures2d/nonfree.hpp"
 #include <iostream>
 
 using namespace cv;
@@ -18,9 +18,10 @@ static void on_mouse(int event, int x, int y, int flags, void *_param) {
 static void help()
 {
     printf("\nThis program demonstrates using features2d detector, descriptor extractor and simple matcher\n"
-            "Using the SURF desriptor:\n"
-            "\n"
-            "Usage:\n tracking <image1> <video device>\n");
+	   "Using the SURF desriptor:\n"
+	   "\n"
+	   "Usage:\n tracking <image1> <video device>\n"
+	   "The default <video device> configuration is /dev/video0\n");
 }
 
 int main(int argc, char** argv)
@@ -32,16 +33,16 @@ int main(int argc, char** argv)
     }
 
     Mat img1 = imread(argv[1], CV_LOAD_IMAGE_GRAYSCALE);
-	VideoCapture cap;
+    VideoCapture cap;
 
     if(img1.empty()) {
         printf("Can't read one of the images\n");
         return -1;
     }
 
-	cap.open(0);
+    cap.open(0);
     if( !cap.isOpened() ) {
-		std::cout << "Could not initialize capturing...\n";
+      std::cout << "Could not initialize capturing...\n";
         return 0;
     }
 
@@ -82,7 +83,7 @@ int main(int argc, char** argv)
 		if(key == 'c') params->foveaModel.wy = MIN(params->foveaModel.uy-1, params->foveaModel.wy + 10);
 		if(key == 'z') params->foveaModel.wy = MAX(1, params->foveaModel.wy-10);
 		if(key >= '1' && key <= '9') {
-			if(key - '1' < params->foveaModel.beta.size())
+		  if(key - '1' < (signed int)params->foveaModel.beta.size())
 				params->foveaModel.beta[key - '1'] = 1 - params->foveaModel.beta[key - '1'];
 		}
 		if(key == 'f') tracking.useFovea = 1 - tracking.useFovea;

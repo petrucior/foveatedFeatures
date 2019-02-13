@@ -1,11 +1,17 @@
 #include <stdio.h>
+#include <iostream>
+#include <istream>
+#include <fstream>
+#include <string>
 #include "../multiFoveation.h"
 #include "opencv2/core/core.hpp"
-#include "opencv2/features2d/features2d.hpp"
+//#include "opencv2/features2d/features2d.hpp"
 #include "opencv2/highgui/highgui.hpp"
-#include "opencv2/nonfree/nonfree.hpp"
+#include "opencv2/xfeatures2d/nonfree.hpp"
 
+using namespace std;
 using namespace cv;
+using namespace cv::xfeatures2d;
 
 struct strutureUnion{
   MultiFoveation* m;
@@ -89,10 +95,12 @@ int main(int argc, char** argv){
     std::cout << "Feature extraction = " << t*1000/cv::getTickFrequency() << " milliseconds" << std::endl;
     
     // Computing descriptors
-    SurfDescriptorExtractor extractor;
+    //SurfDescriptorExtractor extractor;
+    Ptr<SURF> detector = SURF::create(400);
     Mat descriptors;
     t = cv::getTickCount();
-    extractor.compute(image, keypointSave, descriptors);
+    //extractor.compute(image, keypointSave, descriptors);
+    detector->detectAndCompute( image, noArray(), keypointSave, descriptors, true );
     t = cv::getTickCount() - t;
     std::cout << "Feature description = " << t*1000/cv::getTickFrequency() << " milliseconds" << std::endl;
     
@@ -110,9 +118,9 @@ int main(int argc, char** argv){
       su.setStrutureParam(&controlFoveaMove);
     }
     if ( key == 'a' ){ // Add foveae
-      String file;
-      std::cin >> file;
-      foveas.addFovea(image, file);
+      //String file;
+      //std::cin >> file;
+      //foveas.addFovea(image, file);
     }
     if ( key == 'r' ){ // Remove foveae
       foveas.removeFovea(controlFoveaMove);

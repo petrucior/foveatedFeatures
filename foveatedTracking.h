@@ -24,10 +24,14 @@
 
 #include "foveatedHessianDetector.h"
 #include "opencv2/core/core.hpp"
-#include "opencv2/features2d/features2d.hpp"
+//#include "opencv2/features2d/features2d.hpp"
 #include "opencv2/highgui/highgui.hpp"
-#include "opencv2/nonfree/nonfree.hpp"
+#include "opencv2/xfeatures2d/nonfree.hpp"
 #include <iostream>
+
+using namespace std;
+using namespace cv;
+using namespace cv::xfeatures2d;
 
 struct FoveatedTracking {
 
@@ -59,10 +63,13 @@ struct FoveatedTracking {
 		params = NULL;
 
 		//model image feature extraction and descriptors
-		SurfFeatureDetector detector(100);
-		detector.detect(modelImg, modelKeypoints);
-		SurfDescriptorExtractor extractor;
-		extractor.compute(modelImg, modelKeypoints, modelDescriptors);
+		//SurfFeatureDetector detector(100);
+		Ptr<SURF> detector = SURF::create(100);
+		//detector.detect(modelImg, modelKeypoints);
+		detector->detect(modelImg, modelKeypoints);
+		//SurfDescriptorExtractor extractor;
+		//extractor.compute(modelImg, modelKeypoints, modelDescriptors);
+		detector->detectAndCompute( modelImg, noArray(), modelKeypoints, modelDescriptors, true );
 
 		//object corners points
 		obj_corners.push_back(cvPoint(0, 0));
@@ -82,21 +89,27 @@ struct FoveatedTracking {
 			params = new FoveatedHessianDetectorParams(frame.cols, frame.rows, ymlFile);
 		}
 
+		Ptr<SURF> detector = SURF::create(300);
 		//Feature extraction and description
 		if(useFovea)
 			foveatedHessianDetector(frame, Mat(), imgKeypoints, *params);
 		else {
-			SurfFeatureDetector detector(300);
-			detector.detect(frame, imgKeypoints);
+		  //SurfFeatureDetector detector(300);
+		  //detector.detect(frame, imgKeypoints);
+		  detector->detect(frame, imgKeypoints);
 		}
-		SurfDescriptorExtractor extractor;
-		extractor.compute(frame, imgKeypoints, imgDescriptors);
+		//SurfDescriptorExtractor extractor;
+		//extractor.compute(frame, imgKeypoints, imgDescriptors);
+		detector->detectAndCompute( frame, noArray(), imgKeypoints, imgDescriptors, true );
 
 		//matching descriptors
-		BFMatcher matcher(NORM_L2);
+		//BFMatcher matcher(NORM_L2);
+		Ptr<BFMatcher> matcher = BFMatcher::create(NORM_L2);
 		vector<DMatch> matches;
-		if ( !imgDescriptors.empty() )
-		  matcher.match(modelDescriptors, imgDescriptors, matches);
+		if ( !imgDescriptors.empty() ){
+		  //matcher.match(modelDescriptors, imgDescriptors, matches);
+		  matcher->match( modelDescriptors, imgDescriptors, matches );
+		}
 	
 //		std::cout << matches.size() << " " << modelDescriptors.size() << " " << imgDescriptors.size() << std::endl;
 		if(matches.size() > 5) {

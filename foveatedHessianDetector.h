@@ -56,11 +56,13 @@
 #define FOVEATED_HESSIANDETECTOR
 
 #include <stdio.h>
+#include <iostream>
 #include "opencv2/opencv.hpp"
 #include "opencv2/core/core.hpp"
 #include "linearFoveation.h"
 
 using namespace cv;
+using namespace std;
 
 static const int   SURF_ORI_SEARCH_INC = 5;
 static const float SURF_ORI_SIGMA      = 2.5f;
@@ -632,7 +634,7 @@ static void fastFoveatedHessianDetector( const Mat& sum, const Mat& mask_sum, ve
       traces[index].create( params.foveaModel.uy, params.foveaModel.ux, CV_32F );
       sizes[index] = (SURF_HAAR_SIZE0 + SURF_HAAR_SIZE_INC*layer) << (params.foveaModel.eta[i] - 1);
       sampleSteps[index] = 1 << (params.foveaModel.eta[i] - 1);
-
+      
       if( 0 < layer && layer <= nOctaveLayers )
 	middleIndices[middleIndex++] = index;
       /*std::cout << index << " " << layer << ", sampleStep = " << sampleSteps[index] << "\t";
@@ -653,7 +655,7 @@ static void fastFoveatedHessianDetector( const Mat& sum, const Mat& mask_sum, ve
 		 SURFFindInvoker(sum, mask_sum, dets, traces, sizes,
 				 sampleSteps, middleIndices, keypoints,
 				 nOctaveLayers, hessianThreshold, params, margin, foveaLevel) );
-
+  
   std::sort(keypoints.begin(), keypoints.end(), KeypointGreater());
 }
 
